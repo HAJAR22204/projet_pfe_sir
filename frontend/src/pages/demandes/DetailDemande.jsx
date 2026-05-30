@@ -153,10 +153,17 @@ export default function DetailDemande() {
           {/* Détails demande */}
           <div style={S.card}>
             <h3 style={S.cardTitle}>Détails de la demande</h3>
-            <InfoRow
-              label="Type de document"
-              value={TYPE_LABELS[demande.type_document] || demande.type_document}
-            />
+            <div style={{ marginBottom:'12px' }}>
+              <p style={S.infoLabel}>Type de document</p>
+              <p style={{
+                fontSize:'13px', color:'#374151', fontWeight:'500',
+                backgroundColor:'#F5F7FB', padding:'10px 12px',
+                borderRadius:'6px', borderLeft:'3px solid #0F5FB4',
+                marginTop:'4px', lineHeight:'1.5',
+              }}>
+                {TYPE_LABELS[demande.type_document] || demande.type_document}
+              </p>
+            </div>
             {demande.semestre && (
               <InfoRow label="Semestre" value={`Semestre ${demande.semestre}`} />
             )}
@@ -170,17 +177,7 @@ export default function DetailDemande() {
               })}
             />
             {demande.commentaire && (
-              <div style={{ marginBottom:'12px' }}>
-                <p style={S.infoLabel}>Commentaire</p>
-                <p style={{
-                  fontSize:'13px', color:'#374151', fontWeight:'500',
-                  backgroundColor:'#F5F7FB', padding:'10px 12px',
-                  borderRadius:'6px', borderLeft:'3px solid #0F5FB4',
-                  marginTop:'4px', lineHeight:'1.5',
-                }}>
-                  {demande.commentaire}
-                </p>
-              </div>
+              <InfoRow label="Commentaire" value={demande.commentaire} />
             )}
           </div>
 

@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { demandeService } from '../../services/api';
+import {
+  HiOutlineInboxStack,
+  HiOutlineClock,
+  HiOutlineArrowPath,
+  HiOutlineCheckBadge,
+  HiOutlineXCircle,
+} from 'react-icons/hi2';
 
 const PERIODES = [
   { key: 'aujourd_hui', label: "Aujourd'hui" },
@@ -11,10 +18,10 @@ const PERIODES = [
 
 const TYPE_LABELS = {
   attestation_inscription: 'Attestation inscription',
-  certificat_scolarite:'Certificat scolarité',
-  releve_notes:'Relevé de notes',
-  diplome_deust:'Diplôme DEUST',
-  retrait_bac:'Retrait bac',
+  certificat_scolarite: 'Certificat scolarité',
+  releve_notes: 'Relevé de notes',
+  diplome_deust: 'Diplôme DEUST',
+  retrait_bac: 'Retrait bac',
 };
 
 export default function Dashboard() {
@@ -41,16 +48,15 @@ export default function Dashboard() {
     </div>
   );
 
-  const resume = stats?.resume  || {};
-  const perf = stats?.performance || {};
-  const parType = stats?.par_type_document || {};
-  const parAgent  = stats?.par_agent  || [];
+  const resume   = stats?.resume              || {};
+  const perf     = stats?.performance         || {};
+  const parType  = stats?.par_type_document   || {};
+  const parAgent = stats?.par_agent           || [];
   const evolution = stats?.evolution_par_jour || [];
 
   return (
     <div style={S.container}>
 
-      {/* Filtres période */}
       <div style={S.periodeRow}>
         {PERIODES.map(p => (
           <button key={p.key} onClick={() => setPeriode(p.key)}
@@ -70,18 +76,21 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Cartes statistiques */}
       <div style={S.cardsRow}>
         <StatCard
           label="TOTAL DEMANDES REÇUES"
           value={resume.total ?? 0}
           color="#0F5FB4"
+          bgColor="#EFF6FF"
+          icon={<HiOutlineInboxStack />}
           onClick={() => navigate('/demandes')}
         />
         <StatCard
           label="EN ATTENTE DE TRAITEMENT"
           value={resume.en_attente ?? 0}
           color="#F28C28"
+          bgColor="#FFF7ED"
+          icon={<HiOutlineClock />}
           sub={resume.total > 0
             ? `${Math.round(((resume.en_attente ?? 0) / resume.total) * 100)}% du total`
             : '0%'}
@@ -92,12 +101,16 @@ export default function Dashboard() {
           label="EN COURS DE TRAITEMENT"
           value={resume.en_cours ?? 0}
           color="#0A74D1"
+          bgColor="#EFF6FF"
+          icon={<HiOutlineArrowPath />}
           onClick={() => navigate('/demandes?statut=en_cours')}
         />
         <StatCard
           label="DOCUMENTS PRÊTS"
           value={resume.prete ?? 0}
           color="#27AE60"
+          bgColor="#F0FDF4"
+          icon={<HiOutlineCheckBadge />}
           sub={resume.total > 0
             ? `${Math.round(((resume.prete ?? 0) / resume.total) * 100)}% Taux`
             : '0% Taux'}
@@ -108,6 +121,8 @@ export default function Dashboard() {
           label="DEMANDES REFUSÉES"
           value={resume.refusee ?? 0}
           color="#E74C3C"
+          bgColor="#FFF1F2"
+          icon={<HiOutlineXCircle />}
           sub={resume.total > 0
             ? `${Math.round(((resume.refusee ?? 0) / resume.total) * 100)}% Taux`
             : '0% Taux'}
@@ -116,10 +131,7 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Taux + Performance */}
       <div style={S.row2}>
-
-        {/* Taux de traitement */}
         <div style={S.card}>
           <h3 style={S.cardTitle}>Taux de traitement</h3>
           <div style={S.tauxContainer}>
@@ -128,7 +140,7 @@ export default function Dashboard() {
               <span style={S.tauxLabel}>Traité</span>
             </div>
             <div style={S.tauxDetails}>
-              <TauxRow label="Validées" value={resume.prete   ?? 0} total={resume.total ?? 1} color="#27AE60" />
+              <TauxRow label="Validées" value={resume.prete ?? 0} total={resume.total ?? 1} color="#27AE60" />
               <TauxRow label="Refusées" value={resume.refusee ?? 0} total={resume.total ?? 1} color="#E74C3C" />
               <TauxRow label="En cours"
                 value={(resume.en_attente ?? 0) + (resume.en_cours ?? 0)}
@@ -139,7 +151,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Performance */}
         <div style={S.card}>
           <h3 style={S.cardTitle}>Performance</h3>
           <div style={S.perfGrid}>
@@ -155,9 +166,7 @@ export default function Dashboard() {
           </div>
           {(perf.demandes_en_retard ?? 0) > 0 && (
             <div style={S.alertBox}>
-              <span>
-                {perf.demandes_en_retard} demande(s) en attente depuis plus de 48h
-              </span>
+              <span>{perf.demandes_en_retard} demande(s) en attente depuis plus de 48h</span>
               <button onClick={() => navigate('/demandes?statut=en_attente')} style={S.alertBtn}>
                 Voir
               </button>
@@ -166,10 +175,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Par type + Par agent */}
       <div style={S.row2}>
-
-        {/* Par type de document */}
         <div style={S.card}>
           <h3 style={S.cardTitle}>Par type de document</h3>
           <div style={S.typeList}>
@@ -189,7 +195,6 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Par agent */}
         <div style={S.card}>
           <h3 style={S.cardTitle}>Performance des agents</h3>
           {parAgent.length === 0 ? (
@@ -230,7 +235,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Évolution par jour */}
       {evolution.length > 0 && (
         <div style={S.card}>
           <h3 style={S.cardTitle}>Évolution des demandes</h3>
@@ -261,23 +265,32 @@ export default function Dashboard() {
   );
 }
 
-
-function StatCard({ label, value, color, sub, subColor, onClick }) {
+function StatCard({ label, value, color, bgColor, icon, sub, subColor, onClick }) {
   return (
     <div
       onClick={onClick}
-      style={{ ...S.statCard, borderTop: `3px solid ${color}`, cursor: onClick ? 'pointer' : 'default' }}
+      style={{ ...S.statCard, cursor: onClick ? 'pointer' : 'default' }}
       onMouseEnter={e => {
-        e.currentTarget.style.transform   = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow   = `0 6px 20px ${color}22`;
+        e.currentTarget.style.transform = 'translateY(-2px)';
+        e.currentTarget.style.boxShadow = `0 6px 20px ${color}22`;
       }}
       onMouseLeave={e => {
-        e.currentTarget.style.transform   = 'translateY(0)';
-        e.currentTarget.style.boxShadow   = '0 1px 4px rgba(0,0,0,0.06)';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)';
       }}
     >
-      <p style={S.statLabel}>{label}</p>
-      <div style={{ display:'flex', alignItems:'flex-end', gap:'10px', marginTop:'10px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+        <p style={S.statLabel}>{label}</p>
+        <div style={{
+          width:'42px', height:'42px', borderRadius:'12px',
+          backgroundColor: bgColor,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize:'22px', color: color, display:'flex' }}>{icon}</span>
+        </div>
+      </div>
+      <div style={{ display:'flex', alignItems:'flex-end', gap:'10px', marginTop:'14px' }}>
         <p style={{ ...S.statValue, color }}>{value}</p>
         {sub && (
           <span style={{
@@ -334,8 +347,6 @@ function PerfCard({ label, value, alert }) {
   );
 }
 
-
-
 const S = {
   container: { display:'flex', flexDirection:'column', gap:'20px' },
 
@@ -361,7 +372,7 @@ const S = {
     display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'16px',
   },
   statCard: {
-    backgroundColor:'#fff', borderRadius:'12px', padding:'20px',
+    backgroundColor:'#fff', borderRadius:'16px', padding:'20px',
     boxShadow:'0 1px 4px rgba(0,0,0,0.06)', border:'1px solid #E2E8F0',
     transition:'transform 0.2s, box-shadow 0.2s',
     display:'flex', flexDirection:'column', justifyContent:'space-between',

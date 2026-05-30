@@ -418,22 +418,7 @@ export default function ListeDemandes() {
               </>
             )}
 
-            {selected.commentaire && (
-              <>
-                <div style={S.panelDivider} />
-                <div style={S.panelSection}>
-                  <p style={S.panelLabel}>REMARQUES DE L'ÉTUDIANT</p>
-                  <p style={{
-                    fontSize:'13px', color:'#374151', marginTop:'8px',
-                    lineHeight:'1.6', backgroundColor:'#F5F7FB',
-                    padding:'10px 12px', borderRadius:'6px',
-                    borderLeft:'3px solid #0F5FB4',
-                  }}>
-                    {selected.commentaire}
-                  </p>
-                </div>
-              </>
-            )}
+           
 
             <div style={S.panelDivider} />
 
