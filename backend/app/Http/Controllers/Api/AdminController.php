@@ -179,15 +179,17 @@ class AdminController extends Controller
             ->take(10)
             ->get()
             ->map(function($demande) {
-                return [
-                    'id' => $demande->id,
-                    'type_document' => $demande->type_document,
-                    'statut' => $demande->statut,
-                    'etudiant' => $demande->prenom . ' ' . $demande->nom,
-                    'traite_par' => $demande->traitePar?->prenom . ' ' . $demande->traitePar?->nom,
-                    'date' => $demande->date_traitement,
-                ];
-            });
+            return [
+            'id'            => $demande->id,
+            'type_document' => $demande->type_document,
+            'statut'        => $demande->statut,
+            'nom'           => $demande->nom,
+            'prenom'        => $demande->prenom,
+            'traite_par'    => $demande->traitePar?->prenom . ' ' . $demande->traitePar?->nom,
+            'date_creation' => $demande->date_creation,
+            'date'          => $demande->date_traitement ?? $demande->date_creation,
+        ];
+        });
 
         return response()->json([
             'total_users' => $totalUsers,

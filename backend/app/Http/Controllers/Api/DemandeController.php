@@ -267,23 +267,18 @@ class DemandeController extends Controller
     ];
 
     $parAgent = Demande::whereNotNull('traite_par')
-        ->when($dateDebut, fn($q) => $q->where('date_creation', '>=', $dateDebut))
-        ->with('traitePar')
-        ->selectRaw('traite_par, COUNT(*) as total, 
-                     SUM(CASE WHEN statut = "prete" THEN 1 ELSE 0 END) as validees,
-                     SUM(CASE WHEN statut = "refusee" THEN 1 ELSE 0 END) as refusees,
-                     AVG(TIMESTAMPDIFF(HOUR, date_creation, date_traitement)) as temps_moyen')
-        ->groupBy('traite_par')
-        ->get()
-        ->map(function($item) {
-            return [
-                'agent' => $item->traitePar ? $item->traitePar->prenom . ' ' . $item->traitePar->nom : 'Inconnu',
-                'total_traitees' => $item->total,
-                'validees' => $item->validees,
-                'refusees' => $item->refusees,
-                'temps_moyen_heures' => round($item->temps_moyen, 1),
-            ];
-        });
+    ->whereBetween('date_traitement', [$dateDebut ?? Carbon::now()->subYear(), Carbon::now()])
+    ->join('users', 'demandes.traite_par', '=', 'users.id')
+    ->selectRaw('
+        demandes.traite_par,
+        users.nom,
+        users.prenom,
+        COUNT(*) as total,
+        SUM(CASE WHEN demandes.statut = "prete" THEN 1 ELSE 0 END) as prete,
+        SUM(CASE WHEN demandes.statut = "refusee" THEN 1 ELSE 0 END) as refusee
+    ')
+    ->groupBy('demandes.traite_par', 'users.nom', 'users.prenom')
+    ->get();
 
     $evolutionParJour = Demande::when($dateDebut, fn($q) => $q->where('date_creation', '>=', $dateDebut))
         ->selectRaw('DATE(date_creation) as jour, COUNT(*) as total')
