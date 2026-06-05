@@ -103,5 +103,14 @@ class ApogeeService
             return ($annee - 1) . '-' . $annee;
         }
     }
-    
+    public function getAnneeUniversitaireParSemestre($codeApogee, $semestre)
+{
+    $inscription = DB::connection('apogee')
+        ->table('INSCRIPTIONS')
+        ->where('CODE_APOGEE', $codeApogee)
+        ->where('SEMESTRE', intval($semestre))
+        ->first();
+
+    return $inscription->ANNEE_UNIVERSITAIRE ?? null;
+}
 }

@@ -1,14 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function Login() {
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [mounted, setMounted]   = useState(false);
+  const { login }               = useAuth();
+  const navigate                = useNavigate();
+
+  useEffect(() => {
+    const t = setTimeout(() => setMounted(true), 50);
+    return () => clearTimeout(t);
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -25,291 +31,297 @@ export default function Login() {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={S.container}>
 
-      {/* Côté gauche */}
-      <div style={styles.leftPanel}>
-        <div style={styles.leftContent}>
-          <img
-            src="/ministry.png"
-            alt="Ministère"
-            height={90}
-            width={200}
-            style={styles.ministryLogo}
-          />
-          <h1 style={styles.leftTitle}>Université Cadi Ayyad</h1>
-          <h2 style={styles.leftSubtitle}>Faculté des Sciences et Techniques</h2>
-          <p style={styles.leftCity}>Marrakech</p>
-          <div style={styles.divider} />
-          <p style={styles.leftDesc}>
-            Système de gestion des demandes administratives
-          </p>
-          <div style={styles.badgeRow}>
-            <span style={styles.badge}>Scolarité Digitale</span>
-            <span style={styles.badge}>Sécurisé</span>
-          </div>
+      <style>{`
+        @keyframes fadeInPhoto {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes overlayIn {
+          from { opacity: 0; }
+          to   { opacity: 0.8; }
+        }
+        @keyframes logoSlideIn {
+          0%   { opacity: 0;    transform: translateX(120%) translateY(-50%); }
+          60%  { opacity: 0.3; transform: translateX(-2%) translateY(-50%); }
+          100% { opacity: 0.3; transform: translateX(0%)  translateY(-50%); }
+        }
+        @keyframes logoFloat {
+          0%   { opacity: 0.3; transform: translateX(0%) translateY(-50%); }
+          50%  { opacity: 0.3; transform: translateX(0%) translateY(calc(-50% - 4px)); }
+          100% { opacity: 0.3; transform: translateX(0%) translateY(-50%); }
+        }
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        .login-btn:hover {
+          transform: translateY(-2px) !important;
+          box-shadow: 0 8px 24px rgba(198,112,28,0.5) !important;
+        }
+        .login-btn:active {
+          transform: translateY(0px) !important;
+        }
+        .login-input:focus {
+          border-color: rgba(255,255,255,0.6) !important;
+          background-color: rgba(255,255,255,0.12) !important;
+        }
+      `}</style>
+
+      {/* ── Photo de la faculté ── */}
+      <img
+        src="/fstg.jpg"
+        alt="FST"
+        style={{
+          ...S.photo,
+          animation: 'fadeInPhoto 1.6s ease forwards',
+        }}
+      />
+
+      {/* ── Overlay dégradé bleu ── */}
+      <div style={{
+        ...S.overlay,
+        animation: 'overlayIn 2s ease 0.3s forwards',
+        opacity: 0,
+      }} />
+
+      {/* ── Logo UCA : slide depuis droite puis flotte ── */}
+      <img
+        src="/logo_univ_orange.png"
+        alt="UCA"
+        style={{
+          ...S.ucaLogo,
+          animation: mounted
+            ? 'logoSlideIn 1.2s ease 0.5s forwards, logoFloat 3.5s ease-in-out 1.7s infinite'
+            : 'none',
+          opacity: 0,
+        }}
+      />
+
+      {/* ── Formulaire centré ── */}
+      <div style={{
+        ...S.formWrapper,
+        animation: 'slideUp 0.8s ease 0.5s forwards',
+        opacity: 0,
+      }}>
+
+        <div style={S.logoWrapper}>
+          <img src="/LOGO_FST-NObg.png" width="80" height="80" alt="FST" style={S.fstLogo} />
         </div>
-      </div>
 
-      {/* Côté droit */}
-      <div style={styles.rightPanel}>
-        <div style={styles.formCard}>
+        <h2 style={S.formTitle}>Connexion</h2>
+        <p style={S.formSubtitle}>Scolarité Digitale — FST Marrakech</p>
 
-          {/* Logo + Titre */}
-          <div style={styles.logoWrapper}>
-            <img src="/LOGO_FST.png" alt="FST" style={styles.fstLogo} />
+        {error && (
+          <div style={S.errorBox}>
+            <span>⚠</span>
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} style={S.form}>
+          <div style={S.inputGroup}>
+            <label style={S.label}>Adresse email</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="exemple@scolarite.ma"
+              style={S.input}
+              className="login-input"
+              required
+            />
           </div>
 
-          <h2 style={styles.formTitle}>Connexion</h2>
-          <p style={styles.formSubtitle}>Back-office Scolarité — FST Marrakech</p>
+          <div style={S.inputGroup}>
+            <label style={S.label}>Mot de passe</label>
+            <input
+              type="password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="••••••••"
+              style={S.input}
+              className="login-input"
+              required
+            />
+          </div>
 
-          {/* Erreur */}
-          {error && (
-            <div style={styles.errorBox}>
-              <span style={styles.errorIcon}>⚠</span>
-              <span>{error}</span>
-            </div>
-          )}
+          <button
+            type="submit"
+            disabled={loading}
+            className="login-btn"
+            style={{
+              ...S.button,
+              opacity: loading ? 0.75 : 1,
+              cursor: loading ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {loading ? 'Connexion en cours...' : 'Se connecter'}
+          </button>
+        </form>
 
-          {/* Formulaire */}
-          <form onSubmit={handleSubmit} style={styles.form}>
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Adresse email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="exemple@scolarite.ma"
-                style={styles.input}
-                required
-              />
-            </div>
-
-            <div style={styles.inputGroup}>
-              <label style={styles.label}>Mot de passe</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                style={styles.input}
-                required
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              style={{
-                ...styles.button,
-                opacity: loading ? 0.75 : 1,
-                cursor: loading ? 'not-allowed' : 'pointer',
-              }}
-            >
-              {loading ? 'Connexion en cours...' : 'Se connecter'}
-            </button>
-          </form>
-
-          <p style={styles.footer}>
-            FST Marrakech — Scolarité © {new Date().getFullYear()}
-          </p>
-        </div>
+        <p style={S.footer}>
+          FST Marrakech — Scolarité © {new Date().getFullYear()}
+        </p>
       </div>
     </div>
   );
 }
 
-const styles = {
+const S = {
   container: {
-    display: 'flex',
+    position: 'relative',
     height: '100vh',
     width: '100vw',
     overflow: 'hidden',
-  },
-
-  /* ── Panneau gauche ── */
-  leftPanel: {
-    flex: 1,
-    background: 'linear-gradient(160deg, #0A2D6A 0%, #0F5FB4 55%, #0A74D1 100%)',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '40px',
-    position: 'relative',
-    overflow: 'hidden',
+    background: '#041b44',
   },
-  leftContent: {
-    textAlign: 'center',
-    color: '#fff',
-    position: 'relative',
+
+  photo: {
+    position: 'absolute',
+    inset: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: 'cover',
     zIndex: 1,
-  },
-  ministryLogo: {
-    width: '130px',
-    marginBottom: '32px',
-    filter: 'brightness(1.1) drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
-  },
-  leftTitle: {
-    fontSize: '22px',
-    fontWeight: '800',
-    color: '#fff',
-    marginBottom: '8px',
-    letterSpacing: '0.3px',
-  },
-  leftSubtitle: {
-    fontSize: '16px',
-    fontWeight: '500',
-    color: '#FFD23F',
-    marginBottom: '6px',
-  },
-  leftCity: {
-    fontSize: '13px',
-    color: 'rgba(255,255,255,0.6)',
-    marginBottom: '28px',
-    letterSpacing: '2px',
-    textTransform: 'uppercase',
-  },
-  divider: {
-    width: '50px',
-    height: '3px',
-    background: 'linear-gradient(90deg, #F28C28, #FFD23F)',
-    margin: '0 auto 24px',
-    borderRadius: '2px',
-  },
-  leftDesc: {
-    fontSize: '13px',
-    color: 'rgba(255,255,255,0.65)',
-    lineHeight: '1.7',
-    maxWidth: '260px',
-    margin: '0 auto 24px',
-  },
-  badgeRow: {
-    display: 'flex',
-    gap: '8px',
-    justifyContent: 'center',
-    marginTop: '4px',
-  },
-  badge: {
-    fontSize: '10px',
-    fontWeight: '600',
-    color: 'rgba(255,255,255,0.7)',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    border: '1px solid rgba(255,255,255,0.2)',
-    padding: '4px 10px',
-    borderRadius: '20px',
-    letterSpacing: '0.5px',
-    textTransform: 'uppercase',
+    opacity: 0,
   },
 
-  /* ── Panneau droit ── */
-  rightPanel: {
-    flex: 1,
-    backgroundColor: '#F5F7FB',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '40px',
+  overlay: {
+    position: 'absolute',
+    inset: 0,
+    background: 'linear-gradient(135deg, rgba(4,27,68,0.82) 0%, rgba(10,57,139,0.75) 100%)',
+    zIndex: 2,
+    opacity: 0,
   },
-  formCard: {
-    backgroundColor: '#fff',
-    borderRadius: '20px',
+
+  ucaLogo: {
+    position: 'absolute',
+    top: '50%',
+    left: '-2%',
+    transform: 'translateX(120%) translateY(-50%)',
+    width: '52%',
+    maxWidth: '580px',
+    zIndex: 3,
+    opacity: 0,
+    pointerEvents: 'none',
+    objectFit: 'contain',
+    objectPosition: 'center center',
+  },
+
+  formWrapper: {
+    position: 'relative',
+    zIndex: 10,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    backdropFilter: 'blur(14px)',
+    WebkitBackdropFilter: 'blur(14px)',
+    border: '1px solid rgba(255,255,255,0.15)',
+    borderRadius: '24px',
     padding: '48px 44px',
     width: '100%',
-    maxWidth: '440px',
-    boxShadow: '0 8px 32px rgba(15,95,180,0.1)',
-    border: '1px solid #E2E8F0',
+    maxWidth: '420px',
     textAlign: 'center',
+    boxShadow: '0 8px 40px rgba(0,0,0,0.35)',
+    opacity: 0,
   },
+
   logoWrapper: {
     display: 'flex',
     justifyContent: 'center',
-    marginBottom: '20px',
+    marginBottom: '16px',
   },
+
   fstLogo: {
-    width: '90px',
-    height: '90px',
+    width: '80px',
+    height: '80px',
     objectFit: 'contain',
+    filter: 'drop-shadow(0 2px 10px rgba(255,255,255,0.2))',
   },
+
   formTitle: {
     fontSize: '26px',
     fontWeight: '800',
-    color: '#1B263B',
-    marginBottom: '6px',
+    color: '#fff',
+    marginBottom: '4px',
     letterSpacing: '-0.3px',
   },
+
   formSubtitle: {
-    fontSize: '13px',
-    color: '#374151',
+    fontSize: '12px',
+    color: 'rgba(255,255,255,0.55)',
     marginBottom: '28px',
+    letterSpacing: '0.3px',
   },
 
-  /* Erreur */
   errorBox: {
-    backgroundColor: '#FFF1F2',
-    border: '1px solid #FECDD3',
+    backgroundColor: 'rgba(231,76,60,0.2)',
+    border: '1px solid rgba(231,76,60,0.4)',
     borderLeft: '4px solid #E74C3C',
     borderRadius: '8px',
     padding: '11px 14px',
     marginBottom: '20px',
-    color: '#991B1B',
+    color: '#FECDD3',
     fontSize: '13px',
     textAlign: 'left',
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
   },
-  errorIcon: {
-    fontSize: '14px',
-    flexShrink: 0,
-  },
 
-  /* Formulaire */
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '18px',
+    gap: '16px',
     textAlign: 'left',
   },
+
   inputGroup: {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
   },
+
   label: {
-    fontSize: '12px',
+    fontSize: '11px',
     fontWeight: '700',
-    color: '#374151',
+    color: 'rgba(255,255,255,0.7)',
     textTransform: 'uppercase',
-    letterSpacing: '0.5px',
+    letterSpacing: '0.6px',
   },
+
   input: {
     padding: '12px 16px',
     borderRadius: '10px',
-    border: '1.5px solid #E2E8F0',
+    border: '1.5px solid rgba(255,255,255,0.2)',
     fontSize: '14px',
     outline: 'none',
-    transition: 'border-color 0.2s, box-shadow 0.2s',
-    color: '#1B263B',
-    backgroundColor: '#F5F7FB',
+    color: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    transition: 'border-color 0.2s, background-color 0.2s',
   },
+
   button: {
     padding: '14px',
-    background: 'linear-gradient(135deg, #0F5FB4, #0A74D1)',
+    background: 'linear-gradient(135deg, #F28C28, #C6701C)',
     color: '#fff',
     border: 'none',
     borderRadius: '10px',
     fontSize: '15px',
     fontWeight: '700',
     marginTop: '6px',
-    transition: 'opacity 0.2s, transform 0.1s',
+    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
     letterSpacing: '0.3px',
-    boxShadow: '0 4px 12px rgba(15,95,180,0.3)',
+    boxShadow: '0 4px 14px rgba(198,112,28,0.35)',
   },
 
   footer: {
-    marginTop: '28px',
+    marginTop: '24px',
     fontSize: '11px',
-    color: '#374151',
+    color: 'rgba(255,255,255,0.35)',
     letterSpacing: '0.3px',
   },
 };

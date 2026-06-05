@@ -5,30 +5,31 @@ import { useAuth } from '../../context/AuthContext';
 
 const STATUT_STYLES = {
   en_attente: { bg: '#FFF7ED', color: '#F28C28', label: 'En attente' },
-  en_cours: { bg: '#EFF6FF', color: '#0A74D1', label: 'En cours' },
-  prete:{ bg: '#F0FDF4', color: '#27AE60', label: 'Prête' },
-  refusee:{ bg: '#FFF1F2', color: '#E74C3C', label: 'Refusée' },
+  en_cours:   { bg: '#EFF6FF', color: '#0A74D1', label: 'En cours' },
+  prete:      { bg: '#F0FDF4', color: '#27AE60', label: 'Prête' },
+  refusee:    { bg: '#FFF1F2', color: '#E74C3C', label: 'Refusée' },
 };
 
 const TYPE_LABELS = {
   attestation_inscription: "Attestation d'inscription",
-  certificat_scolarite:'Certificat de scolarité',
-  releve_notes:'Relevé de notes',
-  diplome_deust:'Diplôme DEUST',
-  retrait_bac:'Retrait bac',
+  certificat_scolarite:    'Certificat de scolarité',
+  releve_notes:            'Relevé de notes',
+  diplome_deust:           'Diplôme DEUST',
+  retrait_bac:             'Retrait bac',
 };
 
-export default function DetailDemande() {
-  const { id } = useParams();
-  const navigate= useNavigate();
-  const { user } = useAuth();
+export default function DetailDemande({ modalId, onClose }) {
+  const params    = useParams();
+  const id        = modalId ?? params.id;
+  const navigate  = useNavigate();
+  const { user }  = useAuth();
 
-  const [demande, setDemande]= useState(null);
-  const [loading, setLoading] = useState(true);
+  const [demande, setDemande]           = useState(null);
+  const [loading, setLoading]           = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showRefusModal, setShowRefusModal] = useState(false);
-  const [motifRefus, setMotifRefus]= useState('');
-  const [message, setMessage]= useState(null);
+  const [motifRefus, setMotifRefus]     = useState('');
+  const [message, setMessage]           = useState(null);
 
   useEffect(() => { fetchDemande(); }, [id]);
 
@@ -69,7 +70,7 @@ export default function DetailDemande() {
     setActionLoading(true);
     try {
       await demandeService.refuser(id, motifRefus);
-      setMessage({ type:'success', text:'Demande refusée. Email envoyé à l\'étudiant.' });
+      setMessage({ type:'success', text:"Demande refusée. Email envoyé à l'étudiant." });
       setShowRefusModal(false);
       setMotifRefus('');
       fetchDemande();
@@ -87,23 +88,29 @@ export default function DetailDemande() {
   if (!demande) return (
     <div style={{ textAlign:'center', padding:'60px' }}>
       <p style={{ color:'#E74C3C', marginBottom:'16px' }}>Demande introuvable</p>
-      <button onClick={() => navigate('/demandes')} style={S.backBtn}>
+      <button
+        onClick={() => onClose ? onClose() : navigate('/demandes')}
+        style={S.backBtn}
+      >
         Retour aux demandes
       </button>
     </div>
   );
 
-  const ss  = STATUT_STYLES[demande.statut] || {};
+  const ss              = STATUT_STYLES[demande.statut] || {};
   const peutMettreEnCours = demande.statut === 'en_attente';
-  const peutValider = demande.statut === 'en_cours';
-  const peutRefuser= ['en_attente','en_cours'].includes(demande.statut);
+  const peutValider       = demande.statut === 'en_cours';
+  const peutRefuser       = ['en_attente','en_cours'].includes(demande.statut);
 
   return (
     <div style={S.container}>
 
       {/* ── Header ── */}
       <div style={S.header}>
-        <button onClick={() => navigate('/demandes')} style={S.backBtn}>
+        <button
+          onClick={() => onClose ? onClose() : navigate('/demandes')}
+          style={S.backBtn}
+        >
           ← Retour aux demandes
         </button>
         <div style={{ display:'flex', gap:'10px', alignItems:'center' }}>
@@ -121,8 +128,8 @@ export default function DetailDemande() {
         <div style={{
           ...S.messageBox,
           backgroundColor: message.type === 'success' ? '#F0FDF4' : '#FFF1F2',
-          borderColor: message.type === 'success' ? '#27AE60' : '#E74C3C',
-          color: message.type === 'success' ? '#166534' : '#991B1B',
+          borderColor:     message.type === 'success' ? '#27AE60' : '#E74C3C',
+          color:           message.type === 'success' ? '#166534' : '#991B1B',
         }}>
           <span>{message.text}</span>
           <button onClick={() => setMessage(null)} style={S.closeMsg}>✕</button>
@@ -134,7 +141,6 @@ export default function DetailDemande() {
         {/* ── Colonne gauche ── */}
         <div style={S.leftCol}>
 
-          {/* Étudiant */}
           <div style={S.card}>
             <h3 style={S.cardTitle}>Informations étudiant</h3>
             <div style={S.etudiantHeader}>
@@ -146,11 +152,10 @@ export default function DetailDemande() {
                 <p style={S.etudiantEmail}>{demande.email}</p>
               </div>
             </div>
-            <InfoRow label="CNE" value={demande.cne} />
-            <InfoRow label="Code Apogée"  value={demande.code_apogee} />
+            <InfoRow label="CNE"         value={demande.cne} />
+            <InfoRow label="Code Apogée" value={demande.code_apogee} />
           </div>
 
-          {/* Détails demande */}
           <div style={S.card}>
             <h3 style={S.cardTitle}>Détails de la demande</h3>
             <div style={{ marginBottom:'12px' }}>
@@ -181,7 +186,6 @@ export default function DetailDemande() {
             )}
           </div>
 
-          {/* Traitement */}
           {(demande.traite_par || demande.date_traitement || demande.motif_refus) && (
             <div style={S.card}>
               <h3 style={S.cardTitle}>Informations de traitement</h3>
@@ -214,11 +218,9 @@ export default function DetailDemande() {
         {/* ── Colonne droite ── */}
         <div style={S.rightCol}>
 
-          {/* Actions */}
           <div style={S.card}>
             <h3 style={S.cardTitle}>Actions</h3>
 
-            {/* Timeline */}
             <div style={{ marginBottom:'20px' }}>
               <Step
                 done  label="Soumission"
@@ -243,7 +245,6 @@ export default function DetailDemande() {
               />
             </div>
 
-            {/* Boutons d'action */}
             <div style={{ display:'flex', flexDirection:'column', gap:'10px' }}>
               {peutMettreEnCours && (
                 <button
@@ -260,7 +261,12 @@ export default function DetailDemande() {
                   disabled={actionLoading}
                   style={{ ...S.actionBtn, background:'linear-gradient(135deg, #27AE60, #1E8449)' }}
                 >
-                  {actionLoading ? 'Génération...' : 'Valider et générer PDF'}
+                  {actionLoading
+                    ? 'Traitement...'
+                    : demande.type_document === 'retrait_bac'
+                      ? 'Valider la demande'
+                      : 'Valider et générer PDF'
+                  }
                 </button>
               )}
               {peutRefuser && (
@@ -283,7 +289,6 @@ export default function DetailDemande() {
             </div>
           </div>
 
-          {/* Document généré */}
           {demande.document && (
             <div style={S.card}>
               <h3 style={S.cardTitle}>Document généré</h3>
@@ -311,7 +316,6 @@ export default function DetailDemande() {
               </div>
             </div>
           )}
-
         </div>
       </div>
 
@@ -323,8 +327,7 @@ export default function DetailDemande() {
               <h3 style={S.modalTitle}>Refuser la demande</h3>
             </div>
             <p style={{ fontSize:'13px', color:'#374151', marginBottom:'20px', lineHeight:'1.6' }}>
-              Veuillez indiquer le motif du refus.
-              L'étudiant sera notifié par email.
+              Veuillez indiquer le motif du refus. L'étudiant sera notifié par email.
             </p>
             <textarea
               value={motifRefus}
@@ -355,8 +358,6 @@ export default function DetailDemande() {
     </div>
   );
 }
-
-
 
 function InfoRow({ label, value }) {
   return (
@@ -395,7 +396,6 @@ function Step({ done, active, label, date, color }) {
   );
 }
 
-
 const S = {
   container: { display:'flex', flexDirection:'column', gap:'16px' },
 
@@ -404,7 +404,6 @@ const S = {
     padding:'8px 16px', backgroundColor:'#fff',
     border:'1.5px solid #E2E8F0', borderRadius:'8px',
     fontSize:'13px', cursor:'pointer', color:'#374151', fontWeight:'500',
-    transition:'all 0.2s',
   },
   statutBadge: {
     padding:'6px 14px', borderRadius:'20px',

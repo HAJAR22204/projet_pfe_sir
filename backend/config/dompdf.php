@@ -80,6 +80,9 @@ return [
          */
         'chroot' => realpath(base_path()),
 
+        'is_unicode'     => true, 
+        'enable_html5_parser'     => true,
+
         /**
          * Protocol whitelist
          *

@@ -48,15 +48,25 @@ export default function Dashboard() {
     </div>
   );
 
-  const resume   = stats?.resume              || {};
-  const perf     = stats?.performance         || {};
-  const parType  = stats?.par_type_document   || {};
-  const parAgent = stats?.par_agent           || [];
-  const evolution = stats?.evolution_par_jour || [];
+  const resume    = stats?.resume              || {};
+  const perf      = stats?.performance         || {};
+  const parType   = stats?.par_type_document   || {};
+  const parAgent  = stats?.par_agent           || [];
+  const evolution = stats?.evolution_par_jour  || [];
 
   return (
     <div style={S.container}>
 
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes cardFlip {
+          0%   { opacity: 0; transform: rotateY(90deg); }
+          100% { opacity: 1; transform: rotateY(0deg); }
+        }
+        .card-flip { animation: cardFlip 0.6s ease 0.2s both; }
+      `}</style>
+
+      {/* ── Filtres période ── */}
       <div style={S.periodeRow}>
         {PERIODES.map(p => (
           <button key={p.key} onClick={() => setPeriode(p.key)}
@@ -64,117 +74,115 @@ export default function Dashboard() {
               ...S.periodeBtn,
               backgroundColor: periode === p.key ? '#0F5FB4' : '#fff',
               color: periode === p.key ? '#fff' : '#374151',
-              border: periode === p.key
-                ? '1.5px solid #0F5FB4'
-                : '1.5px solid #E2E8F0',
-              boxShadow: periode === p.key
-                ? '0 2px 8px rgba(15,95,180,0.2)'
-                : 'none',
+              border: periode === p.key ? '1.5px solid #0F5FB4' : '1.5px solid #E2E8F0',
+              boxShadow: periode === p.key ? '0 2px 8px rgba(15,95,180,0.2)' : 'none',
             }}>
             {p.label}
           </button>
         ))}
       </div>
 
-      <div style={S.cardsRow}>
-        <StatCard
-          label="TOTAL DEMANDES REÇUES"
-          value={resume.total ?? 0}
-          color="#0F5FB4"
-          bgColor="#EFF6FF"
-          icon={<HiOutlineInboxStack />}
-          onClick={() => navigate('/demandes')}
-        />
-        <StatCard
-          label="EN ATTENTE DE TRAITEMENT"
-          value={resume.en_attente ?? 0}
-          color="#F28C28"
-          bgColor="#FFF7ED"
-          icon={<HiOutlineClock />}
-          sub={resume.total > 0
-            ? `${Math.round(((resume.en_attente ?? 0) / resume.total) * 100)}% du total`
-            : '0%'}
-          subColor="#F28C28"
-          onClick={() => navigate('/demandes?statut=en_attente')}
-        />
-        <StatCard
-          label="EN COURS DE TRAITEMENT"
-          value={resume.en_cours ?? 0}
-          color="#0A74D1"
-          bgColor="#EFF6FF"
-          icon={<HiOutlineArrowPath />}
-          onClick={() => navigate('/demandes?statut=en_cours')}
-        />
-        <StatCard
-          label="DOCUMENTS PRÊTS"
-          value={resume.prete ?? 0}
-          color="#27AE60"
-          bgColor="#F0FDF4"
-          icon={<HiOutlineCheckBadge />}
-          sub={resume.total > 0
-            ? `${Math.round(((resume.prete ?? 0) / resume.total) * 100)}% Taux`
-            : '0% Taux'}
-          subColor="#27AE60"
-          onClick={() => navigate('/demandes?statut=prete')}
-        />
-        <StatCard
-          label="DEMANDES REFUSÉES"
-          value={resume.refusee ?? 0}
-          color="#E74C3C"
-          bgColor="#FFF1F2"
-          icon={<HiOutlineXCircle />}
-          sub={resume.total > 0
-            ? `${Math.round(((resume.refusee ?? 0) / resume.total) * 100)}% Taux`
-            : '0% Taux'}
-          subColor="#E74C3C"
-          onClick={() => navigate('/demandes?statut=refusee')}
-        />
-      </div>
+      {/* ── Ligne 1 : Grande carte gauche + Taux/Perf droite ── */}
+      <div style={S.mainRow}>
 
-      <div style={S.row2}>
-        <div style={S.card}>
-          <h3 style={S.cardTitle}>Taux de traitement</h3>
-          <div style={S.tauxContainer}>
-            <div style={S.tauxCircle}>
-              <span style={S.tauxValue}>{resume.taux_traitement ?? 0}%</span>
-              <span style={S.tauxLabel}>Traité</span>
+        {/* Grande carte stats */}
+        <div
+          style={S.bigCard}
+          className="card-flip"
+          onClick={() => navigate('/demandes')}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 8px 30px rgba(15,95,180,0.35)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(15,95,180,0.25)';
+          }}
+        >
+          <div style={S.bigCardTop}>
+            <div>
+              <p style={S.bigCardLabel}>TOTAL DEMANDES REÇUES</p>
+              <p style={S.bigCardValue}>{resume.total ?? 0}</p>
             </div>
-            <div style={S.tauxDetails}>
-              <TauxRow label="Validées" value={resume.prete ?? 0} total={resume.total ?? 1} color="#27AE60" />
-              <TauxRow label="Refusées" value={resume.refusee ?? 0} total={resume.total ?? 1} color="#E74C3C" />
-              <TauxRow label="En cours"
-                value={(resume.en_attente ?? 0) + (resume.en_cours ?? 0)}
-                total={resume.total ?? 1}
-                color="#F28C28"
+            <div style={S.bigCardIcon}>
+              <HiOutlineInboxStack style={{ fontSize:'32px', color:'#fff' }} />
+            </div>
+          </div>
+          <div style={S.miniCardsGrid}>
+            <MiniCard
+              label="En attente"
+              value={resume.en_attente ?? 0}
+              icon={<HiOutlineClock style={{ fontSize:'16px' }} />}
+              sub={resume.total > 0 ? `${Math.round(((resume.en_attente ?? 0) / resume.total) * 100)}%` : '0%'}
+              onClick={e => { e.stopPropagation(); navigate('/demandes?statut=en_attente'); }}
+            />
+            <MiniCard
+              label="En cours"
+              value={resume.en_cours ?? 0}
+              icon={<HiOutlineArrowPath style={{ fontSize:'16px' }} />}
+              onClick={e => { e.stopPropagation(); navigate('/demandes?statut=en_cours'); }}
+            />
+            <MiniCard
+              label="Documents prêts"
+              value={resume.prete ?? 0}
+              icon={<HiOutlineCheckBadge style={{ fontSize:'16px' }} />}
+              sub={resume.total > 0 ? `${Math.round(((resume.prete ?? 0) / resume.total) * 100)}%` : '0%'}
+              onClick={e => { e.stopPropagation(); navigate('/demandes?statut=prete'); }}
+            />
+            <MiniCard
+              label="Refusées"
+              value={resume.refusee ?? 0}
+              icon={<HiOutlineXCircle style={{ fontSize:'16px' }} />}
+              sub={resume.total > 0 ? `${Math.round(((resume.refusee ?? 0) / resume.total) * 100)}%` : '0%'}
+              onClick={e => { e.stopPropagation(); navigate('/demandes?statut=refusee'); }}
+            />
+          </div>
+        </div>
+
+        {/* Colonne droite : Taux + Performance */}
+        <div style={S.rightCol}>
+
+          <div style={S.card}>
+            <h3 style={S.cardTitle}>Taux de traitement</h3>
+            <div style={S.tauxContainer}>
+              <div style={S.tauxCircle}>
+                <span style={S.tauxValue}>{resume.taux_traitement ?? 0}%</span>
+                <span style={S.tauxLabel}>Traité</span>
+              </div>
+              <div style={S.tauxDetails}>
+                <TauxRow label="Validées" value={resume.prete ?? 0} total={resume.total ?? 1} color="#27AE60" />
+                <TauxRow label="Refusées" value={resume.refusee ?? 0} total={resume.total ?? 1} color="#E74C3C" />
+                <TauxRow label="En cours"
+                  value={(resume.en_attente ?? 0) + (resume.en_cours ?? 0)}
+                  total={resume.total ?? 1}
+                  color="#F28C28"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div style={S.card}>
+            <h3 style={S.cardTitle}>Performance</h3>
+            <div style={S.perfGrid}>
+              <PerfCard label="Temps moyen de réponse" value={`${perf.temps_reponse_moyen_heures ?? 0}h`} />
+              <PerfCard
+                label="Demandes en retard (+48h)"
+                value={perf.demandes_en_retard ?? 0}
+                alert={(perf.demandes_en_retard ?? 0) > 0}
               />
             </div>
+            {(perf.demandes_en_retard ?? 0) > 0 && (
+              <div style={S.alertBox}>
+                <span>{perf.demandes_en_retard} demande(s) en attente depuis plus de 48h</span>
+                <button onClick={() => navigate('/demandes?statut=en_attente')} style={S.alertBtn}>Voir</button>
+              </div>
+            )}
           </div>
-        </div>
 
-        <div style={S.card}>
-          <h3 style={S.cardTitle}>Performance</h3>
-          <div style={S.perfGrid}>
-            <PerfCard
-              label="Temps moyen de réponse"
-              value={`${perf.temps_reponse_moyen_heures ?? 0}h`}
-            />
-            <PerfCard
-              label="Demandes en retard (+48h)"
-              value={perf.demandes_en_retard ?? 0}
-              alert={(perf.demandes_en_retard ?? 0) > 0}
-            />
-          </div>
-          {(perf.demandes_en_retard ?? 0) > 0 && (
-            <div style={S.alertBox}>
-              <span>{perf.demandes_en_retard} demande(s) en attente depuis plus de 48h</span>
-              <button onClick={() => navigate('/demandes?statut=en_attente')} style={S.alertBtn}>
-                Voir
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
+      {/* ── Ligne 2 : Par type + Par agent ── */}
       <div style={S.row2}>
         <div style={S.card}>
           <h3 style={S.cardTitle}>Par type de document</h3>
@@ -185,8 +193,7 @@ export default function Dashboard() {
                 <div style={S.typeBarContainer}>
                   <div style={{
                     ...S.typeBar,
-                    width: resume.total > 0
-                      ? `${(count / resume.total) * 100}%` : '0%',
+                    width: resume.total > 0 ? `${(count / resume.total) * 100}%` : '0%',
                   }} />
                 </div>
                 <span style={S.typeCount}>{count}</span>
@@ -205,28 +212,29 @@ export default function Dashboard() {
             <div style={S.agentList}>
               {parAgent.map((agent, i) => (
                 <div key={i} style={S.agentRow}>
-                  <div style={S.agentAvatar}>
+                  <div style={{ ...S.agentAvatar, opacity: agent.total === 0 ? 0.4 : 1 }}>
                     {agent.prenom?.[0]}{agent.nom?.[0]}
                   </div>
                   <div style={S.agentInfo}>
-                    <p style={S.agentName}>{agent.prenom} {agent.nom}</p>
-                    <p style={S.agentStats}>{agent.total} demandes traitées</p>
+                    <p style={{ ...S.agentName, color: agent.total === 0 ? '#374151' : '#1B263B' }}>
+                      {agent.prenom} {agent.nom}
+                    </p>
+                    <p style={S.agentStats}>
+                      {agent.total} demandes traitées
+                      {agent.total === 0 && <span style={{ color:'#CBD5E1' }}> (Abs.)</span>}
+                    </p>
                   </div>
                   <div style={{ display:'flex', gap:'8px', fontSize:'12px' }}>
                     <span style={{
-                      color:'#27AE60', fontWeight:'600',
-                      backgroundColor:'#F0FDF4',
+                      color: agent.total === 0 ? '#CBD5E1' : '#27AE60', fontWeight:'600',
+                      backgroundColor: agent.total === 0 ? '#F5F7FB' : '#F0FDF4',
                       padding:'2px 8px', borderRadius:'12px',
-                    }}>
-                      {agent.prete} ✓
-                    </span>
+                    }}>{agent.prete ?? 0} ✓</span>
                     <span style={{
-                      color:'#E74C3C', fontWeight:'600',
-                      backgroundColor:'#FFF1F2',
+                      color: agent.total === 0 ? '#CBD5E1' : '#E74C3C', fontWeight:'600',
+                      backgroundColor: agent.total === 0 ? '#F5F7FB' : '#FFF1F2',
                       padding:'2px 8px', borderRadius:'12px',
-                    }}>
-                      {agent.refusee} ✗
-                    </span>
+                    }}>{agent.refusee ?? 0} ✗</span>
                   </div>
                 </div>
               ))}
@@ -235,6 +243,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Évolution ── */}
       {evolution.length > 0 && (
         <div style={S.card}>
           <h3 style={S.cardTitle}>Évolution des demandes</h3>
@@ -265,40 +274,31 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ label, value, color, bgColor, icon, sub, subColor, onClick }) {
+function MiniCard({ label, value, icon, sub, onClick }) {
   return (
     <div
       onClick={onClick}
-      style={{ ...S.statCard, cursor: onClick ? 'pointer' : 'default' }}
-      onMouseEnter={e => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = `0 6px 20px ${color}22`;
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.06)';
-      }}
+      style={S.miniCard}
+      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.2)'}
+      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.12)'}
     >
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-        <p style={S.statLabel}>{label}</p>
-        <div style={{
-          width:'42px', height:'42px', borderRadius:'12px',
-          backgroundColor: bgColor,
-          display:'flex', alignItems:'center', justifyContent:'center',
-          flexShrink: 0,
-        }}>
-          <span style={{ fontSize:'22px', color: color, display:'flex' }}>{icon}</span>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'8px' }}>
+        <span style={{ fontSize:'10px', fontWeight:'700', color:'rgba(255,255,255,0.7)',
+          textTransform:'uppercase', letterSpacing:'0.5px' }}>
+          {label}
+        </span>
+        <div style={{ width:'26px', height:'26px', borderRadius:'8px',
+          backgroundColor:'rgba(255,255,255,0.2)',
+          display:'flex', alignItems:'center', justifyContent:'center', color:'#fff' }}>
+          {icon}
         </div>
       </div>
-      <div style={{ display:'flex', alignItems:'flex-end', gap:'10px', marginTop:'14px' }}>
-        <p style={{ ...S.statValue, color }}>{value}</p>
+      <div style={{ display:'flex', alignItems:'flex-end', gap:'6px' }}>
+        <span style={{ fontSize:'24px', fontWeight:'800', color:'#fff', lineHeight:1 }}>{value}</span>
         {sub && (
-          <span style={{
-            fontSize:'11px', fontWeight:'600', color: subColor || '#374151',
-            backgroundColor: (subColor || '#374151') + '18',
-            padding:'3px 8px', borderRadius:'20px',
-            marginBottom:'4px', whiteSpace:'nowrap',
-          }}>
+          <span style={{ fontSize:'10px', fontWeight:'600', color:'#FFD23F',
+            backgroundColor:'rgba(255,210,63,0.2)', padding:'2px 6px',
+            borderRadius:'10px', marginBottom:'2px' }}>
             {sub}
           </span>
         )}
@@ -318,10 +318,8 @@ function TauxRow({ label, value, total, color }) {
         </span>
       </div>
       <div style={{ backgroundColor:'#E2E8F0', borderRadius:'6px', height:'7px' }}>
-        <div style={{
-          width:`${pct}%`, backgroundColor:color,
-          borderRadius:'6px', height:'7px', transition:'width 0.5s ease',
-        }} />
+        <div style={{ width:`${pct}%`, backgroundColor:color,
+          borderRadius:'6px', height:'7px', transition:'width 0.5s ease' }} />
       </div>
     </div>
   );
@@ -329,15 +327,11 @@ function TauxRow({ label, value, total, color }) {
 
 function PerfCard({ label, value, alert }) {
   return (
-    <div style={{
-      ...S.perfCard,
+    <div style={{ ...S.perfCard,
       borderColor: alert ? '#FECDD3' : '#E2E8F0',
-      backgroundColor: alert ? '#FFF1F2' : '#F5F7FB',
-    }}>
-      <p style={{
-        fontSize:'28px', fontWeight:'800', lineHeight:1,
-        color: alert ? '#E74C3C' : '#0F5FB4',
-      }}>
+      backgroundColor: alert ? '#FFF1F2' : '#F5F7FB' }}>
+      <p style={{ fontSize:'28px', fontWeight:'800', lineHeight:1,
+        color: alert ? '#E74C3C' : '#0F5FB4' }}>
         {value}
       </p>
       <p style={{ fontSize:'11px', color:'#374151', textAlign:'center', marginTop:'6px', lineHeight:'1.4' }}>
@@ -355,10 +349,8 @@ const S = {
     alignItems:'center', justifyContent:'center', height:'60vh',
   },
   spinner: {
-    width:'40px', height:'40px',
-    border:'4px solid #E2E8F0',
-    borderTop:'4px solid #0F5FB4',
-    borderRadius:'50%',
+    width:'40px', height:'40px', border:'4px solid #E2E8F0',
+    borderTop:'4px solid #0F5FB4', borderRadius:'50%',
     animation:'spin 1s linear infinite',
   },
 
@@ -368,21 +360,45 @@ const S = {
     fontWeight:'500', cursor:'pointer', transition:'all 0.2s',
   },
 
-  cardsRow: {
-    display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'16px',
+  mainRow: {
+    display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px', alignItems:'start',
   },
-  statCard: {
-    backgroundColor:'#fff', borderRadius:'16px', padding:'20px',
-    boxShadow:'0 1px 4px rgba(0,0,0,0.06)', border:'1px solid #E2E8F0',
+
+  bigCard: {
+    background: 'linear-gradient(135deg, #11549c 0%, #0A74D1 100%)',
+    borderRadius:'16px', padding:'24px',
+    boxShadow:'0 4px 20px rgba(15,95,180,0.25)',
+    border:'none', cursor:'pointer',
     transition:'transform 0.2s, box-shadow 0.2s',
-    display:'flex', flexDirection:'column', justifyContent:'space-between',
-    minHeight:'110px',
+    perspective:'1000px',
   },
-  statValue: { fontSize:'36px', fontWeight:'800', lineHeight:1 },
-  statLabel: {
-    fontSize:'10px', color:'#374151', fontWeight:'700',
-    letterSpacing:'0.8px', textTransform:'uppercase',
+  bigCardTop: {
+    display:'flex', alignItems:'flex-start',
+    justifyContent:'space-between', marginBottom:'20px',
   },
+  bigCardLabel: {
+    fontSize:'11px', fontWeight:'700', color:'rgba(255,255,255,0.7)',
+    textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'8px',
+  },
+  bigCardValue: {
+    fontSize:'56px', fontWeight:'800', color:'#fff', lineHeight:1,
+  },
+  bigCardIcon: {
+    width:'56px', height:'56px', borderRadius:'14px',
+    backgroundColor:'rgba(255,255,255,0.2)',
+    display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0,
+  },
+  miniCardsGrid: {
+    display:'grid', gridTemplateColumns:'1fr 1fr', gap:'10px',
+  },
+  miniCard: {
+    backgroundColor:'rgba(255,255,255,0.12)',
+    borderRadius:'10px', padding:'12px',
+    border:'1px solid rgba(255,255,255,0.2)',
+    cursor:'pointer', transition:'background-color 0.2s',
+  },
+
+  rightCol: { display:'flex', flexDirection:'column', gap:'20px' },
 
   row2: { display:'grid', gridTemplateColumns:'1fr 1fr', gap:'20px' },
 
@@ -399,13 +415,13 @@ const S = {
 
   tauxContainer: { display:'flex', alignItems:'center', gap:'24px' },
   tauxCircle: {
-    width:'100px', height:'100px', borderRadius:'50%',
+    width:'90px', height:'90px', borderRadius:'50%',
     background:'linear-gradient(135deg, #0F5FB4, #0A74D1)',
     display:'flex', flexDirection:'column',
     alignItems:'center', justifyContent:'center',
     flexShrink:0, boxShadow:'0 4px 16px rgba(15,95,180,0.3)',
   },
-  tauxValue: { fontSize:'22px', fontWeight:'800', color:'#fff' },
+  tauxValue: { fontSize:'20px', fontWeight:'800', color:'#fff' },
   tauxLabel: { fontSize:'10px', color:'rgba(255,255,255,0.8)', marginTop:'2px' },
   tauxDetails: { flex:1 },
 
@@ -413,7 +429,6 @@ const S = {
   perfCard: {
     border:'1.5px solid', borderRadius:'10px', padding:'16px',
     display:'flex', flexDirection:'column', alignItems:'center', gap:'4px',
-    transition:'border-color 0.2s',
   },
 
   alertBox: {
@@ -432,8 +447,7 @@ const S = {
   typeRow: { display:'flex', alignItems:'center', gap:'10px' },
   typeLabel: { fontSize:'12px', color:'#374151', width:'170px', flexShrink:0 },
   typeBarContainer: {
-    flex:1, backgroundColor:'#E2E8F0',
-    borderRadius:'6px', height:'8px', overflow:'hidden',
+    flex:1, backgroundColor:'#E2E8F0', borderRadius:'6px', height:'8px', overflow:'hidden',
   },
   typeBar: {
     height:'8px', backgroundColor:'#0F5FB4',
@@ -458,25 +472,21 @@ const S = {
   agentStats: { fontSize:'11px', color:'#374151', marginTop:'2px' },
 
   emptyState: {
-    padding:'20px', textAlign:'center',
-    backgroundColor:'#F5F7FB', borderRadius:'8px',
+    padding:'20px', textAlign:'center', backgroundColor:'#F5F7FB', borderRadius:'8px',
   },
 
   evolutionContainer: {
-    display:'flex', alignItems:'flex-end', gap:'8px',
-    overflowX:'auto', paddingBottom:'8px',
+    display:'flex', alignItems:'flex-end', gap:'8px', overflowX:'auto', paddingBottom:'8px',
   },
   evolutionDay: {
-    display:'flex', flexDirection:'column',
-    alignItems:'center', gap:'4px', minWidth:'40px',
+    display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', minWidth:'40px',
   },
   evolutionBar: {
     width:'28px', height:'80px', backgroundColor:'#E2E8F0',
     borderRadius:'4px', display:'flex', alignItems:'flex-end', overflow:'hidden',
   },
   evolutionFill: {
-    width:'100%', backgroundColor:'#0F5FB4',
-    borderRadius:'4px', transition:'height 0.5s',
+    width:'100%', backgroundColor:'#0F5FB4', borderRadius:'4px', transition:'height 0.5s',
   },
   evolutionDate: { fontSize:'10px', color:'#374151' },
   evolutionCount: { fontSize:'11px', fontWeight:'700', color:'#1B263B' },

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -7,22 +8,24 @@ import {
   HiOutlineCog6Tooth,
   HiOutlineUsers,
   HiOutlineArrowLeftOnRectangle,
+  HiOutlineChevronLeft,
 } from 'react-icons/hi2';
 
 const menuItems = [
-  { path: '/dashboard',  icon: <HiOutlineSquares2X2 />,     label: 'Tableau de bord' },
-  { path: '/demandes', icon: <HiOutlineInbox />, label: 'Demandes' },
-  { path: '/historique', icon: <HiOutlineClock />, label: 'Historique' },
+  { path: '/dashboard',  icon: <HiOutlineSquares2X2 />, label: 'Tableau de bord' },
+  { path: '/demandes',   icon: <HiOutlineInbox />,      label: 'Demandes' },
+  { path: '/historique', icon: <HiOutlineClock />,      label: 'Historique' },
 ];
 
 const adminItems = [
   { path: '/admin/dashboard', icon: <HiOutlineCog6Tooth />, label: 'Admin Dashboard' },
-  { path: '/admin/users',     icon: <HiOutlineUsers />,      label: 'Utilisateurs' },
+  { path: '/admin/users',     icon: <HiOutlineUsers />,     label: 'Utilisateurs' },
 ];
 
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [collapsed, setCollapsed] = useState(false);
 
   const handleLogout = async () => {
     await logout();
@@ -30,78 +33,132 @@ export default function Sidebar() {
   };
 
   return (
-    <div style={S.sidebar}>
+    <div style={{
+      ...S.sidebar,
+      width:    collapsed ? '68px' : '260px',
+      minWidth: collapsed ? '68px' : '260px',
+    }}>
+
+      <style>{`
+        @keyframes flipH {
+          0%   { transform: rotateY(0deg); }
+          50%  { transform: rotateY(90deg); }
+          100% { transform: rotateY(0deg); }
+        }
+        .logo-flip { animation: flipH 0.5s ease forwards; }
+      `}</style>
 
       {/* ── Logo ── */}
-      <div style={S.logoSection}>
-        <div style={S.logoImgWrapper}>
-          <img src="/LOGO_FST.png" alt="FST" style={S.logo} />
+      <div style={{
+        ...S.logoSection,
+        flexDirection: collapsed ? 'column' : 'column',
+        alignItems: 'center',
+        padding: collapsed ? '14px 8px' : '16px 12px',
+      }}>
+        <div style={{
+          ...S.logoImgWrapper,
+          width:  collapsed ? '44px'  : '100%',
+          height: collapsed ? '44px'  : '80px',
+        }}>
+          <img
+            key={collapsed ? 'c' : 'e'}
+            src={collapsed ? '/logo_univ_orange.png' : '/LOGO_FST-NObg.png'}
+            alt="logo"
+            style={S.logo}
+            className="logo-flip"
+          />
         </div>
-        <div>
-          <p style={S.logoTitle}>FST Marrakech</p>
+        {!collapsed && (
           <p style={S.logoSub}>Scolarité Digitale</p>
-        </div>
+        )}
+      </div>
+
+      {/* ── Toggle ── */}
+      <div style={{
+        display: 'flex',
+        justifyContent: collapsed ? 'center' : 'flex-end',
+        padding: collapsed ? '0 0 8px' : '0 12px 8px',
+      }}>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          style={S.toggleBtn}
+        >
+          <HiOutlineChevronLeft style={{
+            fontSize: '15px',
+            transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.3s ease',
+          }} />
+        </button>
       </div>
 
       <div style={S.divider} />
 
       {/* ── Utilisateur ── */}
-      <div style={S.userSection}>
+      <div style={{
+        ...S.userSection,
+        padding:        collapsed ? '12px 0' : '14px 20px',
+        justifyContent: collapsed ? 'center' : 'flex-start',
+      }}>
         <div style={S.avatar}>
           {user?.prenom?.[0]}{user?.nom?.[0]}
         </div>
-        <div style={S.userInfo}>
-          <p style={S.userName}>{user?.prenom} {user?.nom}</p>
-          <p style={S.userRole}>{getRoleLabel(user?.role)}</p>
-        </div>
+        {!collapsed && (
+          <div style={S.userInfo}>
+            <p style={S.userName}>{user?.prenom} {user?.nom}</p>
+            <p style={S.userRole}>{getRoleLabel(user?.role)}</p>
+          </div>
+        )}
       </div>
 
       <div style={S.divider} />
 
       {/* ── Navigation ── */}
-      <nav style={S.nav}>
-        <p style={S.navSection}>NAVIGATION</p>
+      <nav style={{ ...S.nav, padding: collapsed ? '14px 6px' : '14px 10px' }}>
+        {!collapsed && <p style={S.navSection}>NAVIGATION</p>}
 
         {menuItems.map(item => (
           <NavLink
             key={item.path}
             to={item.path}
+            title={collapsed ? item.label : ''}
             style={({ isActive }) => ({
               ...S.navItem,
+              padding:         collapsed ? '10px' : '10px 14px',
+              justifyContent:  collapsed ? 'center' : 'flex-start',
               backgroundColor: isActive ? '#F28C28' : 'transparent',
-              color:            isActive ? '#fff'    : 'rgba(255,255,255,0.55)',
-              fontWeight:       isActive ? '600'     : '400',
-              boxShadow:        isActive
-                ? '0 2px 8px rgba(242,140,40,0.35)'
-                : 'none',
+              color:           isActive ? '#fff'    : 'rgba(255,255,255,0.55)',
+              fontWeight:      isActive ? '600'     : '400',
+              boxShadow:       isActive ? '0 2px 8px rgba(242,140,40,0.35)' : 'none',
             })}
           >
             <span style={S.navIcon}>{item.icon}</span>
-            <span>{item.label}</span>
+            {!collapsed && <span>{item.label}</span>}
           </NavLink>
         ))}
 
-        {/* ── Admin ── */}
         {user?.role === 'admin' && (
           <>
             <div style={S.divider2} />
-            <p style={{ ...S.navSection, marginTop:'16px' }}>ADMINISTRATION</p>
+            {!collapsed && (
+              <p style={{ ...S.navSection, marginTop:'16px' }}>ADMINISTRATION</p>
+            )}
             {adminItems.map(item => (
               <NavLink
                 key={item.path}
                 to={item.path}
+                title={collapsed ? item.label : ''}
                 style={({ isActive }) => ({
                   ...S.navItem,
+                  padding:         collapsed ? '10px' : '10px 14px',
+                  justifyContent:  collapsed ? 'center' : 'flex-start',
                   backgroundColor: isActive ? '#F28C28' : 'transparent',
-                  color:            isActive ? '#fff'    : 'rgba(255,255,255,0.55)',
-                  fontWeight:       isActive ? '600'     : '400',
-                  boxShadow:        isActive
-                    ? '0 2px 8px rgba(242,140,40,0.35)'
-                    : 'none',
+                  color:           isActive ? '#fff'    : 'rgba(255,255,255,0.55)',
+                  fontWeight:      isActive ? '600'     : '400',
+                  boxShadow:       isActive ? '0 2px 8px rgba(242,140,40,0.35)' : 'none',
                 })}
               >
                 <span style={S.navIcon}>{item.icon}</span>
-                <span>{item.label}</span>
+                {!collapsed && <span>{item.label}</span>}
               </NavLink>
             ))}
           </>
@@ -112,14 +169,21 @@ export default function Sidebar() {
       <div style={S.bottom}>
         <div style={S.divider} />
 
-        <div style={S.versionRow}>
-          <span style={S.versionText}>UCA — FST Marrakech</span>
-          <span style={S.versionBadge}>v1.0</span>
-        </div>
+        {!collapsed && (
+          <div style={S.versionRow}>
+            <span style={S.versionText}>UCA — FST Marrakech</span>
+            <span style={S.versionBadge}>v1.0</span>
+          </div>
+        )}
 
         <button
           onClick={handleLogout}
-          style={S.logoutBtn}
+          title={collapsed ? 'Déconnexion' : ''}
+          style={{
+            ...S.logoutBtn,
+            padding:        collapsed ? '10px 0' : '10px 20px',
+            justifyContent: collapsed ? 'center' : 'flex-start',
+          }}
           onMouseEnter={e => {
             e.currentTarget.style.backgroundColor = 'rgba(242,140,40,0.10)';
             e.currentTarget.style.color = '#F28C28';
@@ -130,7 +194,7 @@ export default function Sidebar() {
           }}
         >
           <span style={S.navIcon}><HiOutlineArrowLeftOnRectangle /></span>
-          <span>Déconnexion</span>
+          {!collapsed && <span>Déconnexion</span>}
         </button>
       </div>
 
@@ -149,53 +213,51 @@ function getRoleLabel(role) {
 
 const S = {
   sidebar: {
-    width: '260px',
-    minWidth: '260px',
-    background: 'linear-gradient(180deg, #0A2D6A 0%, #0A2D6A 60%, #071E47 100%)',
+    background: 'linear-gradient(180deg, #0a398b 0%, #092555 60%, #041738 100%)',
     height: '100vh',
     display: 'flex',
     flexDirection: 'column',
     overflow: 'hidden',
     borderRight: '1px solid rgba(255,255,255,0.06)',
+    transition: 'width 0.3s ease, min-width 0.3s ease',
   },
 
-  /* Logo */
   logoSection: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '20px',
+    gap: '6px',
   },
-  logoImgWrapper: {
-    width: '42px',
-    height: '42px',
-    borderRadius: '10px',
-    backgroundColor: '#fff',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '3px',
-    flexShrink: 0,
-    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-  },
+  
   logo: {
-    width: '36px',
-    height: '36px',
+    width: '100%',
+    height: '100%',
     objectFit: 'contain',
-  },
-  logoTitle: {
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: '700',
-    letterSpacing: '0.2px',
+    mixBlendMode: 'screen',
+    filter: 'brightness(2) contrast(0.9)',
+
+
   },
   logoSub: {
     color: '#FFD23F',
     fontSize: '10px',
     fontWeight: '600',
-    marginTop: '2px',
     letterSpacing: '0.8px',
     textTransform: 'uppercase',
+    textAlign: 'center',
+    marginTop: '6px',
+    width: '100%',
+  },
+  toggleBtn: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: '6px',
+    color: 'rgba(255,255,255,0.5)',
+    cursor: 'pointer',
+    padding: '4px 6px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    transition: 'all 0.2s',
   },
 
   divider: {
@@ -209,12 +271,10 @@ const S = {
     margin: '12px 8px 0',
   },
 
-  /* User */
   userSection: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '14px 20px',
   },
   avatar: {
     width: '36px',
@@ -230,6 +290,7 @@ const S = {
     fontWeight: '700',
     textTransform: 'uppercase',
     boxShadow: '0 2px 8px rgba(242,140,40,0.4)',
+    flexShrink: 0,
   },
   userInfo: { overflow: 'hidden' },
   userName: {
@@ -251,10 +312,8 @@ const S = {
     letterSpacing: '0.5px',
   },
 
-  /* Nav */
   nav: {
     flex: 1,
-    padding: '14px 10px',
     overflowY: 'auto',
   },
   navSection: {
@@ -270,7 +329,6 @@ const S = {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
-    padding: '10px 14px',
     borderRadius: '8px',
     textDecoration: 'none',
     fontSize: '13px',
@@ -286,7 +344,6 @@ const S = {
     flexShrink: 0,
   },
 
-  /* Bottom */
   bottom: { paddingBottom: '12px' },
   versionRow: {
     display: 'flex',
@@ -313,7 +370,6 @@ const S = {
     alignItems: 'center',
     gap: '10px',
     width: '100%',
-    padding: '10px 20px',
     backgroundColor: 'transparent',
     border: 'none',
     color: 'rgba(255,255,255,0.35)',
