@@ -14,6 +14,7 @@ const TYPE_LABELS = {
   attestation_inscription: "Attestation d'inscription",
   certificat_scolarite:    'Certificat de scolarité',
   releve_notes:            'Relevé de notes',
+  attestation_reussite:    'Attestation de réussite',
   diplome_deust:           'Diplôme DEUST',
   retrait_bac:             'Retrait bac',
 };

@@ -17,24 +17,27 @@ class PdfService
     }
 
     public function genererDocument(Demande $demande)
-    {
-        $etudiant            = $this->apogeeService->getInfosEtudiant($demande->code_apogee);
-        $filiere             = $this->apogeeService->getFiliere($etudiant->FILIERE_CODE);
-        $annee_universitaire = $this->apogeeService->getAnneeUniversitaireActuelle();
+{
+    $etudiant            = $this->apogeeService->getInfosEtudiant($demande->code_apogee);
+    $filiere             = $this->apogeeService->getFiliere($etudiant->FILIERE_CODE);
+    $annee_universitaire = $this->apogeeService->getAnneeUniversitaireActuelle();
 
-        switch ($demande->type_document) {
-            case 'attestation_inscription':
-                return $this->genererAttestationInscription($demande, $etudiant, $filiere, $annee_universitaire);
-            case 'certificat_scolarite':
-                return $this->genererCertificatScolarite($demande, $etudiant, $filiere, $annee_universitaire);
-            case 'releve_notes':
-                return $this->genererReleveNotes($demande, $etudiant, $filiere, $annee_universitaire);
-            case 'diplome_deust':
-                return $this->genererDiplomeDeust($demande, $etudiant, $filiere);
-            default:
-                return null;
-        }
+    switch ($demande->type_document) {
+        case 'attestation_inscription':
+            return $this->genererAttestationInscription($demande, $etudiant, $filiere, $annee_universitaire);
+        case 'certificat_scolarite':
+            return $this->genererCertificatScolarite($demande, $etudiant, $filiere, $annee_universitaire);
+        case 'releve_notes':
+            return $this->genererReleveNotes($demande, $etudiant, $filiere, $annee_universitaire);
+        case 'attestation_reussite':
+            return $this->genererAttestationReussite($demande, $etudiant, $filiere);
+        case 'diplome_deust':  
+        case 'retrait_bac':  
+            return null;
+        default:
+            return null;
     }
+}
 
     private function getMpdf(): Mpdf
 {
@@ -173,6 +176,38 @@ class PdfService
         $mpdf->WriteHTML($html);
         return $this->sauvegarderMpdf($mpdf, $demande, 'certificat_scolarite');
     }
+
+    private function genererAttestationReussite($demande, $etudiant, $filiere)
+{
+    $diplome          = $this->apogeeService->getDiplome($demande->code_apogee);
+    $moyenne_generale = $this->apogeeService->getMoyenneGenerale($demande->code_apogee);
+
+    $anneeUniv = $this->apogeeService->getAnneeUniversitaireEtudiant($demande->code_apogee)
+        ?? $this->apogeeService->getAnneeUniversitaireActuelle();
+
+    // Barcode
+    $generator     = new \Picqer\Barcode\BarcodeGeneratorSVG();
+    $barcodeSvg    = $generator->getBarcode(
+        (string) $etudiant->CODE_APOGEE,
+        $generator::TYPE_CODE_128,
+        2, 60
+    );
+    $barcodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg);
+
+    $mpdf = $this->getMpdf();
+    $html = $this->renderView('pdf.attestation_reussite', [
+        'demande'             => $demande,
+        'etudiant'            => $etudiant,
+        'filiere'             => $filiere,
+        'diplome'             => $diplome,
+        'moyenne_generale'    => $moyenne_generale,
+        'annee_universitaire' => str_replace('-', '/', $anneeUniv),
+        'mention_ar'          => $this->mentionEnArabe($diplome?->MENTION),
+        'barcodeBase64'       => $barcodeBase64,
+    ]);
+    $mpdf->WriteHTML($html);
+    return $this->sauvegarderMpdf($mpdf, $demande, 'attestation_reussite');
+}
 
     private function genererReleveNotes($demande, $etudiant, $filiere, $annee_universitaire)
 {

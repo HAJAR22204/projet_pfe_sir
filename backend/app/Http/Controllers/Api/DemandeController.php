@@ -66,7 +66,7 @@ class DemandeController extends Controller
             'nom'           => 'required|string|max:255',
             'prenom'        => 'required|string|max:255',
             'email'         => 'required|email|max:100',
-            'type_document' => 'required|in:attestation_inscription,certificat_scolarite,releve_notes,diplome_deust,retrait_bac',
+            'type_document' => 'required|in:attestation_inscription,certificat_scolarite,releve_notes,attestation_reussite,diplome_deust,retrait_bac',
             'semestre'      => 'required_if:type_document,releve_notes|integer|in:1,2,3,4|nullable',
             'type_retrait'  => 'required_if:type_document,retrait_bac|in:temporaire,definitif|nullable',
             'commentaire'   => 'nullable|string|max:1000',
@@ -150,7 +150,8 @@ class DemandeController extends Controller
             'traite_par'      => $request->user()->id,
         ]);
 
-        if ($demande->type_document !== 'retrait_bac') {
+        $typesSansPdf = ['retrait_bac', 'diplome_deust'];
+        if (!in_array($demande->type_document, $typesSansPdf)) {
             $this->pdfService->genererDocument($demande);
         }
 
@@ -251,6 +252,7 @@ class DemandeController extends Controller
                 SUM(CASE WHEN type_document = 'attestation_inscription' THEN 1 ELSE 0 END) as nb_attestation,
                 SUM(CASE WHEN type_document = 'certificat_scolarite'    THEN 1 ELSE 0 END) as nb_certificat,
                 SUM(CASE WHEN type_document = 'releve_notes'            THEN 1 ELSE 0 END) as nb_releve,
+                SUM(CASE WHEN type_document = 'attestation_reussite'    THEN 1 ELSE 0 END) as nb_attestation_reussite,
                 SUM(CASE WHEN type_document = 'diplome_deust'           THEN 1 ELSE 0 END) as nb_diplome,
                 SUM(CASE WHEN type_document = 'retrait_bac'             THEN 1 ELSE 0 END) as nb_bac
             ")
@@ -313,6 +315,7 @@ class DemandeController extends Controller
                 'attestation_inscription' => $resume->nb_attestation ?? 0,
                 'certificat_scolarite'    => $resume->nb_certificat  ?? 0,
                 'releve_notes'            => $resume->nb_releve      ?? 0,
+                'attestation_reussite'    => $resume->nb_attestation_reussite ?? 0,
                 'diplome_deust'           => $resume->nb_diplome     ?? 0,
                 'retrait_bac'             => $resume->nb_bac         ?? 0,
             ],

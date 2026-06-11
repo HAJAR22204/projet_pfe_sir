@@ -113,4 +113,15 @@ class ApogeeService
 
     return $inscription->ANNEE_UNIVERSITAIRE ?? null;
 }
+    public function getAnneeUniversitaireEtudiant($codeApogee)
+{
+    $inscription = DB::connection($this->connection)
+        ->table('INSCRIPTIONS')
+        ->where('CODE_APOGEE', $codeApogee)
+        ->where('STATUT', 'VALIDE')
+        ->orderBy('ANNEE_UNIVERSITAIRE', 'desc')
+        ->first();
+
+    return $inscription->ANNEE_UNIVERSITAIRE ?? null;
+}
 }

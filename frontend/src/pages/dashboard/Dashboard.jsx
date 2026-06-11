@@ -17,11 +17,12 @@ const PERIODES = [
 ];
 
 const TYPE_LABELS = {
-  attestation_inscription: 'Attestation inscription',
-  certificat_scolarite: 'Certificat scolarité',
-  releve_notes: 'Relevé de notes',
-  diplome_deust: 'Diplôme DEUST',
-  retrait_bac: 'Retrait bac',
+  attestation_inscription: "Attestation d'inscription",
+  certificat_scolarite:    'Certificat de scolarité',
+  releve_notes:            'Relevé de notes',
+  attestation_reussite:    'Attestation de réussite',
+  diplome_deust:           'Diplôme DEUST',
+  retrait_bac:             'Retrait bac',
 };
 
 export default function Dashboard() {
