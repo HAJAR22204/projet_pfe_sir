@@ -31,17 +31,18 @@
         }
 
         .titre-box {
-            border: 1px solid #000;
-            text-align: center;
-            padding: 8px 20px;
-            margin:45px auto;
-            width:58%;
-            padding:10px;
-            width: 70%;
+            border:1px solid #000;
+            text-align:center;
+            width:62%;
+            padding:5px 12px;
+            margin-top:80px;
+            margin-bottom:30px;
+            margin-left:auto;
+            margin-right:auto;
         }
 
         .titre-fr {
-            font-size: 15px;
+            font-size: 16px;
             font-weight: bold;
             letter-spacing: 1px;
             text-transform: uppercase;
@@ -50,7 +51,7 @@
         .titre-ar {
             font-family: 'dejavusans', sans-serif;
             direction: rtl;
-            font-size: 14px;
+            font-size: 16px;
             margin-top: 4px;
         }
 
@@ -69,9 +70,9 @@
         .note-bas {
             text-align: center;
             font-size: 10px;
-            margin-top: 10px;
+            margin-top: 5px;
             font-style: italic;
-            border-top: 1px solid #ccc;
+            border-top: 3px solid #000000;
             padding-top: 6px;
         }
     </style>
@@ -92,7 +93,7 @@
             <td width="34%" style="text-align:center; vertical-align:middle;">
                 <img src="{{ public_path('logo_fst_nobg.png') }}"
                      alt="FST"
-                     style="width:100px; height:80px;">
+                     style="width:130px; height:100px;">
             </td>
 
             {{-- Droite : arabe --}}
@@ -118,114 +119,112 @@
         Le Doyen de la Faculté des Sciences et Techniques de Marrakech atteste que l'étudiant(e) :
     </div>
 
-    {{-- ── Infos étudiant (2 colonnes) ── --}}
-    <table class="info-table" width="80%" align="center" style="margin-top:15px;">
-        <tr>
-            {{-- Colonne gauche FR --}}
-            <td width="50%" style="vertical-align:top;">
-                <table>
-                    <tr>
-                        <td style="width:70px; padding:2px 6px;">Nom</td>
-                        <td style="padding:2px 4px;">:</td>
-                        <td style="font-weight:bold; padding:2px 6px;">
-                            {{ strtoupper($etudiant->NOM ?? '') }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding:2px 6px;">Prénom</td>
-                        <td style="padding:2px 4px;">:</td>
-                        <td style="font-weight:bold; padding:2px 6px;">
-                            {{ ucfirst(strtolower($etudiant->PRENOM ?? '')) }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="padding:2px 6px;">CNE</td>
-                        <td style="padding:2px 4px;">:</td>
-                        <td style="padding:2px 6px;">{{ $etudiant->CNE ?? '' }}</td>
-                    </tr>
-                    <tr>
-                        <td style="padding:2px 6px;">CIN</td>
-                        <td style="padding:2px 4px;">:</td>
-                        <td style="padding:2px 6px;">{{ $etudiant->CIN ?? '' }}</td>
-                    </tr>
-                    @if($etudiant->DATE_NAISSANCE ?? null)
-                    <tr>
-                        <td style="padding:2px 6px; vertical-align:top;">Née le</td>
-                        <td style="padding:2px 4px; vertical-align:top;">:</td>
-                        <td style="padding:2px 6px;">
-                            {{ \Carbon\Carbon::parse($etudiant->DATE_NAISSANCE)->locale('fr')->isoFormat('D MMMM YYYY') }}
-                            @if($etudiant->LIEU_NAISSANCE ?? null)
-                                &nbsp; à {{ $etudiant->LIEU_NAISSANCE }}
-                            @endif
-                        </td>
-                    </tr>
-                    @endif
-                </table>
-            </td>
+    {{-- ── Infos étudiant ── --}}
+<table width="70%" align="center" style="font-size:12px;">
 
-            {{-- Colonne droite AR --}}
-            <td width="50%" style="vertical-align:top; text-align:right;">
-                <table style="margin-left:auto;">
-                    <tr>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px; font-weight:bold;">
-                            <span class="ar" lang="ar">{{ $etudiant->NOM_AR ?? strtoupper($etudiant->NOM ?? '') }}</span>
-                        </td>
-                        <td style="font-family:'dejavusans'; padding:2px 4px;">:</td>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px;">
-                            <span class="ar" lang="ar">اللقب</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px; font-weight:bold;">
-                            <span class="ar" lang="ar">{{ $etudiant->PRENOM_AR ?? ucfirst(strtolower($etudiant->PRENOM ?? '')) }}</span>
-                        </td>
-                        <td style="font-family:'dejavusans'; padding:2px 4px;">:</td>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px;">
-                            <span class="ar" lang="ar">الاسم</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px;">
-                            {{ $etudiant->CNE ?? '' }}
-                        </td>
-                        <td style="font-family:'dejavusans'; padding:2px 4px;">:</td>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px;">
-                            <span class="ar" lang="ar">ر.و.ط</span>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px;">
-                            {{ $etudiant->CIN ?? '' }}
-                        </td>
-                        <td style="font-family:'dejavusans'; padding:2px 4px;">:</td>
-                        <td style="font-family:'dejavusans'; direction:rtl; padding:2px 6px;">
-                            <span class="ar" lang="ar">ب.ت.و</span>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
+    <tr>
+        <td width="70"><strong>Nom</strong></td>
+        <td width="10">:</td>
+        <td width="120"><strong>{{ strtoupper($etudiant->NOM) }}</strong></td>
+
+        <td width="90" class="ar">
+            <strong>{{ $etudiant->NOM_AR }}</strong>
+        </td>
+        <td width="10">:</td>
+        <td width="60" class="ar"><strong>اللقب</strong></td>
+    </tr>
+
+    <tr>
+        <td><strong>Prénom</strong></td>
+        <td>:</td>
+        <td><strong>{{ $etudiant->PRENOM }}</strong></td>
+
+        <td class="ar">
+            <strong>{{ $etudiant->PRENOM_AR }}</strong>
+        </td>
+        <td>:</td>
+        <td class="ar"><strong>الاسم</strong></td>
+    </tr>
+
+</table>
+
+{{-- Bloc CNE / CIN centré --}}
+<table width="40%" align="center" style="font-size:12px; margin-top:4px;">
+
+    <tr>
+        <td width="45"><strong>CNE</strong></td>
+        <td width="10">:</td>
+
+        <td width="100" align="center">
+            <strong>{{ $etudiant->CNE }}</strong>
+        </td>
+
+        <td width="10">:</td>
+
+        <td width="45" class="ar">
+            <strong>ر.و.ط</strong>
+        </td>
+    </tr>
+
+    <tr>
+        <td><strong>CIN</strong></td>
+        <td>:</td>
+
+        <td align="center">
+            <strong>{{ $etudiant->CIN }}</strong>
+        </td>
+
+        <td>:</td>
+
+        <td class="ar">
+            <strong>ب.ت.و</strong>
+        </td>
+    </tr>
+
+</table>
+
+{{-- Date de naissance --}}
+<table width="70%" align="center" style="font-size:12px; margin-top:4px;">
+
+    <tr>
+        <td width="70"><strong>Née le</strong></td>
+        <td width="10">:</td>
+
+        <td>
+            <strong>{{ \Carbon\Carbon::parse($etudiant->DATE_NAISSANCE)->locale('fr')->isoFormat('D MMMM YYYY') }}</strong>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <strong>à</strong>
+            &nbsp;&nbsp;&nbsp;&nbsp;
+            <strong>{{ $etudiant->LIEU_NAISSANCE }}</strong>
+        </td>
+    </tr>
+
+</table>
 
     {{-- ── Corps ── --}}
     <div class="corps" style="margin-top:16px;">
         <strong>A été déclaré(e) admis(e) au le Diplôme d'Etudes Universitaires Scientifiques et Techniques</strong>
     </div>
 
-    <div class="corps">
-        Filière &nbsp;:
-        &nbsp;&nbsp;&nbsp;&nbsp;{{ $filiere->NOM_FILIERE ?? $filiere->CODE_FILIERE ?? '' }}
-    </div>
+    <table width="70%" align="center" style="font-size:12px; margin-top:4px;">
 
-    <div class="corps">
-        Option &nbsp;&nbsp;:
-        &nbsp;&nbsp;&nbsp;&nbsp;
-        <strong>{{ $filiere->NOM_FILIERE ?? '' }}
+    <tr>
+        <td width="80"><strong>Filière   :</strong></td>
+    </tr>
+    </table>
+    <table width="70%" align="center" style="font-size:12px; margin-top:0px;">
+        <tr>
+        <td align="center"><strong>{{ $filiere->NOM_FILIERE ?? '' }}
         @if(!empty($filiere->CODE_FILIERE))
             -( {{ $filiere->CODE_FILIERE }} )
-        @endif
-        </strong>
-    </div>
+        @endif</strong>
+        </td></tr>
+    </table>
+    <table width="70%" align="center" style="font-size:12px; margin-top:0px;">
+    <tr>
+        <td width="80"><strong>Option   :</strong></td>
+    </tr>
+    </table>
 
     <div class="corps" style="margin-top:10px;">
         Au titre de l'année universitaire
@@ -235,39 +234,32 @@
     </div>
 
     {{-- ── Formule de délivrance ── --}}
-    <div style="margin-top:65px; text-align:center; font-size:12px; font-style:italic;
-        border-bottom:1px solid #000; padding-bottom:4px; width:70%; margin-left:auto; margin-right:auto;">
+    <div style="margin-top:50px; text-align:center; font-size:12px; font-style:italic;
+        border-bottom:2px solid #000; padding-bottom:4px; width:80%; margin-left:auto; margin-right:auto;">
         Cette attestation est délivrée à l'intéressé(e) pour servir et valoir ce que de droit.
     </div>
 
-    {{-- ── Signature + Barcode ── --}}
-    <table width="100%" style="margin-top:30px;">
+    
+    {{-- ── Fait à Marrakech ── --}}
+    <div style="text-align:right; font-size:12px; margin-top:250px;">
+        Fait à Marrakech, le
+        {{ \Carbon\Carbon::now()->locale('fr')->isoFormat('D MMMM YYYY') }}
+    </div>
+
+    {{-- ── Barcode ── --}}
+    <table width="100%" style="margin-top:15px;">
         <tr>
             {{-- Barcode gauche --}}
             <td width="30%" style="vertical-align:bottom; text-align:left;">
                 <img src="{{ $barcodeBase64 }}"
                      style="width:100px; height:35px; position:absolute; bottom: 20px; left: 30px;"
                      alt="Barcode"><br>
-                <div style="font-size:10px; margin-top:2px;">
+                <div align="center" style="font-size:10px; margin-top:2px;">
                     {{ $demande->code_apogee }}
                 </div>
             </td>
-
-            <div style="position:absolute; left:180px; bottom:180px; width:240px; border-top:1px solid black; transform:rotate(-45deg);"></div>
-
-            {{-- Espace signature droite --}}
-            <td width="70%" style="text-align:right; vertical-align:top; font-size:12px;">
-                <div style="font-weight:bold;">Le Doyen</div>
-                <div style="height:180px;"></div>
-            </td>
         </tr>
     </table>
-
-    {{-- ── Fait à Marrakech ── --}}
-    <div style="text-align:right; font-size:12px; margin-top:70px;">
-        Fait à Marrakech, le
-        {{ \Carbon\Carbon::now()->locale('fr')->isoFormat('D MMMM YYYY') }}
-    </div>
 
     {{-- ── Note de bas de page ── --}}
     <div class="note-bas">
