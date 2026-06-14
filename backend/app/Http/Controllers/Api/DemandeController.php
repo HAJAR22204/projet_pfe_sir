@@ -68,7 +68,9 @@ class DemandeController extends Controller
             'email'         => 'required|email|max:100',
             'type_document' => 'required|in:attestation_inscription,certificat_scolarite,releve_notes,attestation_reussite,diplome_deust,retrait_bac',
             'semestre'      => 'required_if:type_document,releve_notes|integer|in:1,2,3,4|nullable',
-            'type_retrait'  => 'required_if:type_document,retrait_bac|in:temporaire,definitif|nullable',
+            'type_retrait'  => 'required_if:type_document,retrait_bac|in:provisoire,definitif|nullable',
+            'periode_retrait_debut' => 'required_if:type_retrait,provisoire|date|nullable',
+            'periode_retrait_fin'   => 'required_if:type_retrait,provisoire|date|after_or_equal:periode_retrait_debut|nullable',
             'commentaire'   => 'nullable|string|max:1000',
         ]);
 
@@ -87,6 +89,8 @@ class DemandeController extends Controller
             'type_document' => $request->type_document,
             'semestre'      => $request->semestre,
             'type_retrait'  => $request->type_retrait,
+            'periode_retrait_debut' => $request->periode_retrait_debut,
+            'periode_retrait_fin'   => $request->periode_retrait_fin,
             'commentaire'   => $request->commentaire,
         ]);
 
@@ -150,7 +154,9 @@ class DemandeController extends Controller
             'traite_par'      => $request->user()->id,
         ]);
 
+        // diplome_deust et retrait_bac = demandes administratives sans génération PDF
         $typesSansPdf = ['retrait_bac', 'diplome_deust'];
+
         if (!in_array($demande->type_document, $typesSansPdf)) {
             $this->pdfService->genererDocument($demande);
         }
@@ -159,8 +165,12 @@ class DemandeController extends Controller
 
         $demande->load(['traitePar', 'document']);
 
+        $message = in_array($demande->type_document, $typesSansPdf)
+            ? "Demande validée avec succès. Email envoyé."
+            : 'Demande validée. Document prêt. Email envoyé.';
+
         return response()->json([
-            'message' => 'Demande validée. Document prêt. Email envoyé.',
+            'message' => $message,
             'demande' => $demande
         ], 200);
     }

@@ -22,6 +22,8 @@ class Demande extends Model
     'type_document',
     'semestre',
     'type_retrait',
+    'periode_retrait_debut',
+    'periode_retrait_fin',
     'commentaire',
     'motif_refus',
 ];
@@ -31,6 +33,8 @@ class Demande extends Model
         'date_traitement' => 'datetime',
         'semestre' => 'integer',
         'type_retrait' => 'string',
+        'periode_retrait_debut' => 'date',
+        'periode_retrait_fin'   => 'date',
     ];
 
     public function traitePar()

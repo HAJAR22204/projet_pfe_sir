@@ -25,6 +25,7 @@ const TYPES = [
   { key: 'attestation_inscription', label: 'Attestation inscription' },
   { key: 'certificat_scolarite',    label: 'Certificat scolarité' },
   { key: 'releve_notes',            label: 'Relevé de notes' },
+  { key: 'attestation_reussite',    label: 'Attestation de réussite' },
   { key: 'diplome_deust',           label: 'Diplôme DEUST' },
   { key: 'retrait_bac',             label: 'Retrait bac' },
 ];

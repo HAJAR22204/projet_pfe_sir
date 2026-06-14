@@ -19,6 +19,15 @@ const TYPE_LABELS = {
   retrait_bac:             'Retrait bac',
 };
 
+const DOCUMENTS_REQUIS = {
+  diplome_deust: [
+    "Copie de la carte nationale d'identité (recto/verso)",
+    "Copie du baccalauréat (recto/verso)",
+    "Copie de l'attestation de réussite",
+    "Lettre de demande de délivrance de diplôme",
+  ],
+};
+
 export default function DetailDemande({ modalId, onClose }) {
   const params    = useParams();
   const id        = modalId ?? params.id;
@@ -55,16 +64,16 @@ export default function DetailDemande({ modalId, onClose }) {
   };
 
   const handleValider = async () => {
-    setActionLoading(true);
-    try {
-      await demandeService.valider(id);
-      setMessage({ type:'success', text:'Demande validée ! Document généré et email envoyé.' });
-      fetchDemande();
-    } catch (e) {
-      setMessage({ type:'error', text: e.response?.data?.message || 'Erreur lors de la validation' });
-      fetchDemande();
-    } finally { setActionLoading(false); }
-  };
+  setActionLoading(true);
+  try {
+    const res = await demandeService.valider(id);
+    setMessage({ type:'success', text: res.data?.message || 'Demande validée avec succès ! Email envoyé.' });
+    fetchDemande();
+  } catch (e) {
+    setMessage({ type:'error', text: e.response?.data?.message || 'Erreur lors de la validation' });
+    fetchDemande();
+  } finally { setActionLoading(false); }
+};
 
   const handleRefuser = async () => {
     if (!motifRefus.trim()) return;
@@ -176,6 +185,10 @@ export default function DetailDemande({ modalId, onClose }) {
             {demande.type_retrait && (
               <InfoRow label="Type retrait" value={demande.type_retrait} />
             )}
+            {demande.type_retrait === 'provisoire' && demande.periode_retrait_debut && demande.periode_retrait_fin && (
+              <InfoRow label="Période de retrait"
+                value={`${formatDate(demande.periode_retrait_debut)}  →  ${formatDate(demande.periode_retrait_fin)}`}/>
+            )}
             <InfoRow
               label="Date de soumission"
               value={new Date(demande.date_creation).toLocaleDateString('fr-FR', {
@@ -186,6 +199,21 @@ export default function DetailDemande({ modalId, onClose }) {
               <InfoRow label="Commentaire" value={demande.commentaire} />
             )}
           </div>
+
+          {DOCUMENTS_REQUIS[demande.type_document] && (
+            <div style={S.card}>
+              <h3 style={S.cardTitle}>Documents à fournir par l'étudiant</h3>
+              <ul style={S.docsList}>
+                {DOCUMENTS_REQUIS[demande.type_document].map((doc, i) => (
+                  <li key={i} style={S.docsItem}>{doc}</li>
+                ))}
+              </ul>
+              <p style={{ fontSize:'12px', color:'#374151', marginTop:'10px', lineHeight:'1.5' }}>
+                Ces documents doivent être déposés physiquement au service de la scolarité.
+                Aucun PDF n'est généré pour cette demande.
+              </p>
+            </div>
+          )}
 
           {(demande.traite_par || demande.date_traitement || demande.motif_refus) && (
             <div style={S.card}>
@@ -215,6 +243,7 @@ export default function DetailDemande({ modalId, onClose }) {
             </div>
           )}
         </div>
+
 
         {/* ── Colonne droite ── */}
         <div style={S.rightCol}>
@@ -264,7 +293,7 @@ export default function DetailDemande({ modalId, onClose }) {
                 >
                   {actionLoading
                     ? 'Traitement...'
-                    : demande.type_document === 'retrait_bac'
+                    : ['retrait_bac', 'diplome_deust'].includes(demande.type_document)
                       ? 'Valider la demande'
                       : 'Valider et générer PDF'
                   }
@@ -306,6 +335,7 @@ export default function DetailDemande({ modalId, onClose }) {
                     Généré le {new Date(demande.document.created_at).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
+                
                 <a
                   href={`http://localhost:8000/storage/${demande.document.chemin_fichier}`}
                   target="_blank"
@@ -358,6 +388,13 @@ export default function DetailDemande({ modalId, onClose }) {
 
     </div>
   );
+}
+
+function formatDate(isoString) {
+  if (!isoString) return '—';
+  // Tronquer les microsecondes (.000000Z → .000Z) pour compatibilité JS Date
+  const cleaned = isoString.replace(/\.(\d{3})\d*Z$/, '.$1Z');
+  return new Date(cleaned).toLocaleDateString('fr-FR');
 }
 
 function InfoRow({ label, value }) {
