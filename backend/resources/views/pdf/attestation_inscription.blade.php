@@ -76,6 +76,10 @@
 </head>
 <body>
 
+@php
+    $estEtranger = mb_strtolower(trim($etudiant->NATIONALITE ?? 'marocaine')) !== 'marocaine';
+@endphp
+
     {{-- ── Header ── --}}
     <table width="100%" style="margin-bottom:4px;">
         <tr>
@@ -135,7 +139,11 @@
 </div>
 
 <div class="corps">
-    Numéro de la carte d'identité nationale :
+    @if($estEtranger)
+        N° de passeport :
+    @else
+        Numéro de la carte d'identité nationale :
+    @endif
     {{ $etudiant->CIN ?? '' }}
 </div>
 
@@ -149,7 +157,10 @@
     @if(($etudiant->GENRE ?? '') === 'F') née @else né @endif
     le {{ \Carbon\Carbon::parse($etudiant->DATE_NAISSANCE)->locale('fr')->isoFormat('D MMMM YYYY') }}
     @if($etudiant->LIEU_NAISSANCE ?? null)
-        à {{ $etudiant->LIEU_NAISSANCE }} ( MAROC )
+        à {{ $etudiant->LIEU_NAISSANCE }}
+        @if(!$estEtranger)
+            ( MAROC )
+        @endif
     @endif
 </div>
 @endif

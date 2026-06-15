@@ -79,6 +79,10 @@
 </head>
 <body>
 
+@php
+    $estEtranger = mb_strtolower(trim($etudiant->NATIONALITE ?? 'marocaine')) !== 'marocaine';
+@endphp
+
     {{-- ── Header ── --}}
     <table width="100%" style="margin-bottom:6px;">
         <tr>
@@ -148,7 +152,7 @@
 
 </table>
 
-{{-- Bloc CNE / CIN centré --}}
+{{-- Bloc CNE / CIN ou Passeport centré --}}
 <table width="40%" align="center" style="font-size:12px; margin-top:4px;">
 
     <tr>
@@ -167,18 +171,33 @@
     </tr>
 
     <tr>
-        <td><strong>CIN</strong></td>
-        <td>:</td>
+        @if($estEtranger)
+            <td><strong>N° Passeport</strong></td>
+            <td>:</td>
 
-        <td align="center">
-            <strong>{{ $etudiant->CIN }}</strong>
-        </td>
+            <td align="center">
+                <strong>{{ $etudiant->CIN }}</strong>
+            </td>
 
-        <td>:</td>
+            <td>:</td>
 
-        <td class="ar">
-            <strong>ب.ت.و</strong>
-        </td>
+            <td class="ar">
+                <strong>رقم الجواز</strong>
+            </td>
+        @else
+            <td><strong>CIN</strong></td>
+            <td>:</td>
+
+            <td align="center">
+                <strong>{{ $etudiant->CIN }}</strong>
+            </td>
+
+            <td>:</td>
+
+            <td class="ar">
+                <strong>ب.ت.و</strong>
+            </td>
+        @endif
     </tr>
 
 </table>

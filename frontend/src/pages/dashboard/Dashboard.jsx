@@ -154,7 +154,7 @@ export default function Dashboard() {
                 <TauxRow label="Validées" value={resume.prete ?? 0} total={resume.total ?? 1} color="#27AE60" />
                 <TauxRow label="Refusées" value={resume.refusee ?? 0} total={resume.total ?? 1} color="#E74C3C" />
                 <TauxRow label="En cours"
-                  value={(resume.en_attente ?? 0) + (resume.en_cours ?? 0)}
+                  value={Number(resume.en_attente ?? 0) + Number(resume.en_cours ?? 0)}
                   total={resume.total ?? 1}
                   color="#F28C28"
                 />
@@ -163,22 +163,11 @@ export default function Dashboard() {
           </div>
 
           <div style={S.card}>
-            <h3 style={S.cardTitle}>Performance</h3>
-            <div style={S.perfGrid}>
-              <PerfCard label="Temps moyen de réponse" value={`${perf.temps_reponse_moyen_heures ?? 0}h`} />
-              <PerfCard
-                label="Demandes en retard (+48h)"
-                value={perf.demandes_en_retard ?? 0}
-                alert={(perf.demandes_en_retard ?? 0) > 0}
-              />
-            </div>
-            {(perf.demandes_en_retard ?? 0) > 0 && (
-              <div style={S.alertBox}>
-                <span>{perf.demandes_en_retard} demande(s) en attente depuis plus de 48h</span>
-                <button onClick={() => navigate('/demandes?statut=en_attente')} style={S.alertBtn}>Voir</button>
-              </div>
-            )}
-          </div>
+  <h3 style={S.cardTitle}>Performance</h3>
+  <div style={S.perfGrid}>
+    <PerfCard label="Temps moyen de réponse" value={`${perf.temps_reponse_moyen_heures ?? 0}h`} />
+  </div>
+</div>
 
         </div>
       </div>

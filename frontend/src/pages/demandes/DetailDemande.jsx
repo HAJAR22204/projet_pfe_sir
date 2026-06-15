@@ -64,16 +64,16 @@ export default function DetailDemande({ modalId, onClose }) {
   };
 
   const handleValider = async () => {
-  setActionLoading(true);
-  try {
-    const res = await demandeService.valider(id);
-    setMessage({ type:'success', text: res.data?.message || 'Demande validée avec succès ! Email envoyé.' });
-    fetchDemande();
-  } catch (e) {
-    setMessage({ type:'error', text: e.response?.data?.message || 'Erreur lors de la validation' });
-    fetchDemande();
-  } finally { setActionLoading(false); }
-};
+    setActionLoading(true);
+    try {
+      const res = await demandeService.valider(id);
+      setMessage({ type:'success', text: res.data?.message || 'Demande validée avec succès !' });
+      fetchDemande();
+    } catch (e) {
+      setMessage({ type:'error', text: e.response?.data?.message || 'Erreur lors de la validation' });
+      fetchDemande();
+    } finally { setActionLoading(false); }
+  };
 
   const handleRefuser = async () => {
     if (!motifRefus.trim()) return;
