@@ -154,12 +154,12 @@ class DemandeController extends Controller
             'traite_par'      => $request->user()->id,
         ]);
 
-        // diplome_deust et retrait_bac = demandes administratives sans génération PDF
+        // diplome_deust et retrait_bac = demandes administratives sans generation PDF
         $typesSansPdf = ['retrait_bac', 'diplome_deust'];
 
-        if (!in_array($demande->type_document, $typesSansPdf)) {
-            $this->pdfService->genererDocument($demande);
-        }
+        // Le PDF n'est plus genere automatiquement.
+        // Pour les 4 types avec document, l'agent generera/enregistrera
+        // le document via les boutons "Apercu / Modifier / Enregistrer".
 
         Mail::to($demande->email)->send(new DocumentPretMail($demande));
 
@@ -167,7 +167,7 @@ class DemandeController extends Controller
 
         $message = in_array($demande->type_document, $typesSansPdf)
             ? "Demande validée avec succès. Email envoyé."
-            : 'Demande validée. Document prêt. Email envoyé.';
+            : "Demande validée. Vous pouvez maintenant generer le document.";
 
         return response()->json([
             'message' => $message,
@@ -367,5 +367,104 @@ class DemandeController extends Controller
             'resume'     => $resume,
             'historique' => $demandes,
         ], 200);
+    }
+
+    /**
+     * ── Retourne le HTML du document pour edition dans l'iframe ──
+     */
+    public function documentHtml(Request $request, $id)
+    {
+        $demande = Demande::find($id);
+
+        if (!$demande) {
+            return response()->json(['message' => 'Demande non trouvée'], 404);
+        }
+
+        if ($demande->statut !== 'prete') {
+            return response()->json(['message' => "Le document n'est disponible que pour une demande prete."], 400);
+        }
+
+        try {
+            $data = $this->pdfService->genererHtmlDocument($demande);
+            return response()->json(['html' => $data['html'], 'orientation' => $data['orientation']]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * ── Apercu PDF : sert le fichier stocke s'il existe (derniere version),
+     * sinon genere a la volee depuis Apogee (premier apercu, sans stockage) ──
+     */
+    public function apercuDocument(Request $request, $id)
+    {
+        $demande = Demande::with('document')->find($id);
+
+        if (!$demande) {
+            return response()->json(['message' => 'Demande non trouvée'], 404);
+        }
+
+        if ($demande->statut !== 'prete') {
+            return response()->json(['message' => "Le document n'est disponible que pour une demande prete."], 400);
+        }
+
+        // Si un fichier a deja ete enregistre (apres modification), le servir directement
+        if ($demande->document) {
+            $cheminComplet = storage_path('app/public/' . $demande->document->chemin_fichier);
+            if (file_exists($cheminComplet)) {
+                return response()->file($cheminComplet, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="apercu.pdf"',
+                ]);
+            }
+        }
+
+        // Sinon, generer en memoire depuis les donnees Apogee (premier apercu)
+        try {
+            $pdfContent = $this->pdfService->genererPdfApercu($demande);
+            return response($pdfContent, 200)
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'inline; filename="apercu.pdf"');
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
+    }
+
+    /**
+     * ── Enregistre le PDF final (HTML modifie) sur disque (remplace l'ancien) ──
+     */
+    public function enregistrerDocumentPdf(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'html'        => 'required|string',
+            'orientation' => 'nullable|in:portrait,paysage',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $demande = Demande::find($id);
+
+        if (!$demande) {
+            return response()->json(['message' => 'Demande non trouvée'], 404);
+        }
+
+        try {
+            $this->pdfService->genererPdfDepuisHtml(
+                $demande,
+                $request->html,
+                $request->orientation ?? 'portrait'
+            );
+
+            $demande->load('document');
+
+            return response()->json([
+                'message' => 'Document enregistre avec succes.',
+                'demande' => $demande,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 }

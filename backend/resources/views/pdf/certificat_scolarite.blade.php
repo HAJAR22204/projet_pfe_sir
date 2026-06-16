@@ -43,6 +43,13 @@
             margin-bottom: 10px;
         }
 
+        .corps[contenteditable="true"]:hover,
+        .diplome-row[contenteditable="true"]:hover {
+            outline: 1px dashed #0F5FB4;
+            background-color: rgba(15,95,180,0.04);
+            cursor: text;
+        }
+
         .diplome-row {
             margin: 45px 0 10px 0;
             font-size: 12px;
@@ -125,20 +132,20 @@
     {{-- ── Titre ── --}}
     <div class="titre">Certificat de scolarité</div>
 
-    {{-- ── Corps ── --}}
-<div class="contenu-certificat">
-<div class="corps">
+    {{-- ── Corps (zone editable) ── --}}
+<div class="contenu-certificat" id="zone-editable">
+<div class="corps" contenteditable="true">
     Le Doyen de la Faculté des Sciences et Techniques de Marrakech atteste que l'étudiant(e) :
 </div>
 
-<div class="corps">
+<div class="corps" contenteditable="true">
     @if(($etudiant->GENRE ?? '') === 'F') Mademoiselle @else Monsieur @endif
     <strong>
         {{ strtoupper($etudiant->NOM) }} {{ ucfirst(strtolower($etudiant->PRENOM)) }}
     </strong>
 </div>
 
-<div class="corps">
+<div class="corps" contenteditable="true">
     @if($estEtranger)
         N° de passeport :
     @else
@@ -147,13 +154,13 @@
     {{ $etudiant->CIN ?? '' }}
 </div>
 
-<div class="corps">
+<div class="corps" contenteditable="true">
     Code national de l'étudiant(e) :
     {{ $etudiant->CNE }}
 </div>
 
 @if($etudiant->DATE_NAISSANCE ?? null)
-<div class="corps">
+<div class="corps" contenteditable="true">
     @if(($etudiant->GENRE ?? '') === 'F') née @else né @endif
     le {{ \Carbon\Carbon::parse($etudiant->DATE_NAISSANCE)->locale('fr')->isoFormat('D MMMM YYYY') }}
     @if($etudiant->LIEU_NAISSANCE ?? null)
@@ -165,14 +172,14 @@
 </div>
 @endif
 
-<div class="corps">
+<div class="corps" contenteditable="true">
     est régulièrement inscrit(e) à la Faculté des Sciences et Techniques
     Guéliz - Marrakech pour l'année universitaire
     {{ $annee_universitaire }}.
 </div>
 
-{{-- ── Diplôme + Filière / Année ── --}}
-<div class="diplome-row">
+{{-- ── Diplôme + Filière / Année (editable) ── --}}
+<div class="diplome-row" contenteditable="true">
     <table>
         <tr>
             <td class="dl">Diplôme :</td>

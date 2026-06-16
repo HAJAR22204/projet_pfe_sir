@@ -39,6 +39,12 @@ export const demandeService = {
   refuser: (id, motif) => api.put(`/demandes/${id}/refuser`, { motif_refus: motif }),
   mettreEnCours: (id) => api.put(`/demandes/${id}/mettre-en-cours`),
   statistiques: (periode) => api.get('/demandes/statistiques', { params: { periode } }),
+
+  // ── Documents : apercu / edition / enregistrement ──
+  documentHtml: (id) => api.get(`/demandes/${id}/document-html`),
+  apercuDocument: (id) => api.get(`/demandes/${id}/document-apercu`, { responseType: 'blob' }),
+  enregistrerDocumentPdf: (id, html, orientation = 'portrait') =>
+    api.post(`/demandes/${id}/document-pdf`, { html, orientation }),
 };
 
 export const etudiantService = {

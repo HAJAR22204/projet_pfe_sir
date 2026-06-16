@@ -75,6 +75,12 @@
             border-top: 3px solid #000000;
             padding-top: 6px;
         }
+
+        [contenteditable="true"]:hover {
+            outline: 1px dashed #0F5FB4;
+            background-color: rgba(15,95,180,0.04);
+            cursor: text;
+        }
     </style>
 </head>
 <body>
@@ -83,7 +89,7 @@
     $estEtranger = mb_strtolower(trim($etudiant->NATIONALITE ?? 'marocaine')) !== 'marocaine';
 @endphp
 
-    {{-- ── Header ── --}}
+    {{-- ── Header (non editable) ── --}}
     <table width="100%" style="margin-bottom:6px;">
         <tr>
             {{-- Gauche --}}
@@ -112,19 +118,19 @@
     </table>
 
 
-    {{-- ── Titre encadré ── --}}
+    {{-- ── Titre encadré (non editable) ── --}}
     <div class="titre-box">
         <div class="titre-fr">ATTESTATION DE RÉUSSITE</div>
         <div class="titre-ar" lang="ar">شهادة النجاح</div>
     </div>
 
-    {{-- ── Introduction ── --}}
-    <div class="corps" style="margin-bottom:16px;">
+    {{-- ── Introduction (editable) ── --}}
+    <div class="corps" style="margin-bottom:16px;" contenteditable="true">
         Le Doyen de la Faculté des Sciences et Techniques de Marrakech atteste que l'étudiant(e) :
     </div>
 
-    {{-- ── Infos étudiant ── --}}
-<table width="70%" align="center" style="font-size:12px;">
+    {{-- ── Infos étudiant (editable) ── --}}
+<table width="70%" align="center" style="font-size:12px;" contenteditable="true">
 
     <tr>
         <td width="70"><strong>Nom</strong></td>
@@ -152,8 +158,8 @@
 
 </table>
 
-{{-- Bloc CNE / CIN ou Passeport centré --}}
-<table width="40%" align="center" style="font-size:12px; margin-top:4px;">
+{{-- Bloc CNE / CIN ou Passeport centré (editable) --}}
+<table width="40%" align="center" style="font-size:12px; margin-top:4px;" contenteditable="true">
 
     <tr>
         <td width="45"><strong>CNE</strong></td>
@@ -202,8 +208,8 @@
 
 </table>
 
-{{-- Date de naissance --}}
-<table width="70%" align="center" style="font-size:12px; margin-top:4px;">
+{{-- Date de naissance (editable) --}}
+<table width="70%" align="center" style="font-size:12px; margin-top:4px;" contenteditable="true">
 
     <tr>
         <td width="70"><strong>Née le</strong></td>
@@ -220,18 +226,18 @@
 
 </table>
 
-    {{-- ── Corps ── --}}
-    <div class="corps" style="margin-top:16px;">
+    {{-- ── Corps (editable) ── --}}
+    <div class="corps" style="margin-top:16px;" contenteditable="true">
         <strong>A été déclaré(e) admis(e) au le Diplôme d'Etudes Universitaires Scientifiques et Techniques</strong>
     </div>
 
-    <table width="70%" align="center" style="font-size:12px; margin-top:4px;">
+    <table width="70%" align="center" style="font-size:12px; margin-top:4px;" contenteditable="true">
 
     <tr>
         <td width="80"><strong>Filière   :</strong></td>
     </tr>
     </table>
-    <table width="70%" align="center" style="font-size:12px; margin-top:0px;">
+    <table width="70%" align="center" style="font-size:12px; margin-top:0px;" contenteditable="true">
         <tr>
         <td align="center"><strong>{{ $filiere->NOM_FILIERE ?? '' }}
         @if(!empty($filiere->CODE_FILIERE))
@@ -239,33 +245,33 @@
         @endif</strong>
         </td></tr>
     </table>
-    <table width="70%" align="center" style="font-size:12px; margin-top:0px;">
+    <table width="70%" align="center" style="font-size:12px; margin-top:0px;" contenteditable="true">
     <tr>
         <td width="80"><strong>Option   :</strong></td>
     </tr>
     </table>
 
-    <div class="corps" style="margin-top:10px;">
+    <div class="corps" style="margin-top:10px;" contenteditable="true">
         Au titre de l'année universitaire
         <strong>{{ $annee_universitaire }}</strong>
         avec la mention
         <strong>{{ $diplome->MENTION ?? '' }}</strong>
     </div>
 
-    {{-- ── Formule de délivrance ── --}}
+    {{-- ── Formule de délivrance (editable) ── --}}
     <div style="margin-top:50px; text-align:center; font-size:12px; font-style:italic;
-        border-bottom:2px solid #000; padding-bottom:4px; width:80%; margin-left:auto; margin-right:auto;">
+        border-bottom:2px solid #000; padding-bottom:4px; width:80%; margin-left:auto; margin-right:auto;" contenteditable="true">
         Cette attestation est délivrée à l'intéressé(e) pour servir et valoir ce que de droit.
     </div>
 
     
-    {{-- ── Fait à Marrakech ── --}}
+    {{-- ── Fait à Marrakech (non editable) ── --}}
     <div style="text-align:right; font-size:12px; margin-top:250px;">
         Fait à Marrakech, le
         {{ \Carbon\Carbon::now()->locale('fr')->isoFormat('D MMMM YYYY') }}
     </div>
 
-    {{-- ── Barcode ── --}}
+    {{-- ── Barcode (non editable) ── --}}
     <table width="100%" style="margin-top:15px;">
         <tr>
             {{-- Barcode gauche --}}
@@ -280,7 +286,7 @@
         </tr>
     </table>
 
-    {{-- ── Note de bas de page ── --}}
+    {{-- ── Note de bas de page (non editable) ── --}}
     <div class="note-bas">
         Avis important : Il ne peut être délivré qu'un seul exemplaire de cette attestation.
         Aucun duplicata ne sera fourni.

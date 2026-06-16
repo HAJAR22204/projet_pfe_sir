@@ -54,6 +54,11 @@
             margin-top: 16px;
             font-style: italic;
         }
+        [contenteditable="true"]:hover {
+            outline: 1px dashed #0F5FB4;
+            background-color: rgba(15,95,180,0.04);
+            cursor: text;
+        }
     </style>
 </head>
 <body>
@@ -91,8 +96,8 @@
 <div style="text-align:center; font-size:16px; font-weight:bold; margin:10px 0 15px 0;">
     Relevé de Notes
 </div>
-    {{-- ── Infos étudiant ── --}}
-    <div style="font-size:12px; line-height:1.9; margin-bottom:8px;">
+    {{-- ── Infos étudiant (zone editable) ── --}}
+    <div style="font-size:12px; line-height:1.9; margin-bottom:8px;" contenteditable="true">
         <div>
             Nom Prénom : &nbsp;&nbsp;
             <strong>{{ strtoupper($etudiant->NOM) }} {{ ucfirst(strtolower($etudiant->PRENOM)) }}</strong>
@@ -114,11 +119,11 @@
         </div>
     </div>
 
-    <div style="font-size:12px; margin-bottom:6px;">a obtenu les notes suivantes :</div>
+    <div style="font-size:12px; margin-bottom:6px;" contenteditable="true">a obtenu les notes suivantes :</div>
 
-    {{-- ── Tableau des notes ── --}}
+    {{-- ── Tableau des notes (editable) ── --}}
     <div style="height:10px;"></div>
-    <table width="100%" style="border-collapse:collapse; font-size:12px; margin:6px 0; border-left:1px solid #000; border-right:1px solid #000;">
+    <table width="100%" style="border-collapse:collapse; font-size:12px; margin:6px 0; border-left:1px solid #000; border-right:1px solid #000;" contenteditable="true">
         <thead>
             <tr>
                 <th style="border-top:1px solid #000; border-bottom:1px solid #000; padding:5px 8px; text-align:left; font-weight:normal; width:52%;"></th>
@@ -146,8 +151,8 @@
             @endforeach
         </tbody>
     </table>
-    {{-- ── Résultat hors tableau ── --}}
-    <table width="100%" style="border-collapse:collapse; font-size:12px; margin:0;"> 
+    {{-- ── Résultat hors tableau (editable) ── --}}
+    <table width="100%" style="border-collapse:collapse; font-size:12px; margin:0;" contenteditable="true">
         <tr> 
             <td style="padding:4px 8px; width:52%;">
                 <strong>Résultat</strong>
@@ -163,7 +168,7 @@
         </tr> 
     </table>
 <br>
-    {{-- ── au dessous du tab ── --}}
+    {{-- ── au dessous du tab (NON editable : barcode + logo) ── --}}
     <table width="100%" style="margin-top:15px;">
     <tr>
         <td width="60%"></td>

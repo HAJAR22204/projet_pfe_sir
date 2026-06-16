@@ -24,6 +24,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('etudiants/{cne}/historique', [DemandeController::class, 'historique']);
 
+    Route::get('/demandes/{id}/document-html', [DemandeController::class, 'documentHtml']);
+    Route::get('/demandes/{id}/document-apercu', [DemandeController::class, 'apercuDocument']);
+    Route::post('/demandes/{id}/document-pdf', [DemandeController::class, 'enregistrerDocumentPdf']);
+
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::get('dashboard', [AdminController::class, 'dashboard']);
         Route::get('users', [AdminController::class, 'index']);

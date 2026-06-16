@@ -316,6 +316,157 @@ class PdfService
     return $this->sauvegarderMpdf($mpdf, $demande, 'diplome_deust');
 }
 
+    /**
+     * ── Retourne le HTML brut d'un document (pour apercu/edition) ──
+     * Utilise pour les 4 types de documents avec PDF.
+     */
+    public function genererHtmlDocument(Demande $demande): array
+    {
+        $etudiant            = $this->apogeeService->getInfosEtudiant($demande->code_apogee);
+        $filiere             = $this->apogeeService->getFiliere($etudiant->FILIERE_CODE);
+        $annee_universitaire = $this->apogeeService->getAnneeUniversitaireActuelle();
+
+        switch ($demande->type_document) {
+
+            case 'attestation_inscription':
+                $html = $this->renderView('pdf.attestation_inscription', [
+                    'demande'             => $demande,
+                    'etudiant'            => $etudiant,
+                    'filiere'             => $filiere,
+                    'annee_universitaire' => $annee_universitaire,
+                ]);
+                return ['html' => $html, 'orientation' => 'portrait'];
+
+            case 'certificat_scolarite':
+                $html = $this->renderView('pdf.certificat_scolarite', [
+                    'demande'             => $demande,
+                    'etudiant'            => $etudiant,
+                    'filiere'             => $filiere,
+                    'annee_universitaire' => $annee_universitaire,
+                ]);
+                return ['html' => $html, 'orientation' => 'portrait'];
+
+            case 'attestation_reussite':
+                $diplome          = $this->apogeeService->getDiplome($demande->code_apogee);
+                $moyenne_generale = $this->apogeeService->getMoyenneGenerale($demande->code_apogee);
+
+                $anneeUniv = $this->apogeeService->getAnneeUniversitaireEtudiant($demande->code_apogee)
+                    ?? $this->apogeeService->getAnneeUniversitaireActuelle();
+
+                $generator     = new \Picqer\Barcode\BarcodeGeneratorSVG();
+                $barcodeSvg    = $generator->getBarcode(
+                    (string) $etudiant->CODE_APOGEE,
+                    $generator::TYPE_CODE_128,
+                    2, 60
+                );
+                $barcodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg);
+
+                $html = $this->renderView('pdf.attestation_reussite', [
+                    'demande'             => $demande,
+                    'etudiant'            => $etudiant,
+                    'filiere'             => $filiere,
+                    'diplome'             => $diplome,
+                    'moyenne_generale'    => $moyenne_generale,
+                    'annee_universitaire' => str_replace('-', '/', $anneeUniv),
+                    'mention_ar'          => $this->mentionEnArabe($diplome?->MENTION),
+                    'barcodeBase64'       => $barcodeBase64,
+                ]);
+                return ['html' => $html, 'orientation' => 'portrait'];
+
+            case 'releve_notes':
+                $notes   = $this->apogeeService->getNotesParSemestre($demande->code_apogee, $demande->semestre);
+                $moyenne = $this->apogeeService->getMoyenneSemestre($demande->code_apogee, $demande->semestre);
+
+                $anneeUniv = $this->apogeeService->getAnneeUniversitaireParSemestre(
+                    $demande->code_apogee,
+                    $demande->semestre
+                ) ?? $annee_universitaire;
+
+                $anneeUnivAffichage = str_replace('-', '/', $anneeUniv);
+
+                $parts = preg_split('/[\-\/]/', $anneeUniv);
+                $semestre = intval($demande->semestre);
+                $anneeReleve = ($semestre % 2 !== 0)
+                    ? intval($parts[0])
+                    : intval($parts[1] ?? $parts[0]);
+
+                $generator     = new \Picqer\Barcode\BarcodeGeneratorSVG();
+                $barcodeData   = (string) $etudiant->CODE_APOGEE;
+                $barcodeSvg    = $generator->getBarcode(
+                    $barcodeData,
+                    $generator::TYPE_CODE_128,
+                    2,
+                    60
+                );
+                $barcodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($barcodeSvg);
+
+                $html = $this->renderView('pdf.releve_notes', [
+                    'demande'             => $demande,
+                    'etudiant'            => $etudiant,
+                    'filiere'             => $filiere,
+                    'annee_universitaire' => $anneeUnivAffichage,
+                    'notes'               => $notes,
+                    'moyenne'             => $moyenne,
+                    'barcodeBase64'       => $barcodeBase64,
+                    'anneeReleve'         => $anneeReleve,
+                ]);
+                return ['html' => $html, 'orientation' => 'portrait'];
+
+            default:
+                throw new \Exception('Type de document non supporte pour l\'edition.');
+        }
+    }
+
+    /**
+     * ── Genere le PDF en memoire pour apercu rapide (sans stockage) ──
+     */
+    public function genererPdfApercu(Demande $demande): string
+    {
+        $data = $this->genererHtmlDocument($demande);
+        $mpdf = $data['orientation'] === 'paysage' ? $this->getMpdfPaysage() : $this->getMpdf();
+        $mpdf->WriteHTML($data['html']);
+        return $mpdf->Output('', 'S'); // 'S' = retourne le contenu binaire, rien sur disque
+    }
+
+    /**
+     * ── Convertit un HTML (potentiellement modifie) en PDF et le stocke ──
+     * Remplace l'ancien fichier si un document existe deja pour cette demande.
+     */
+    public function genererPdfDepuisHtml(Demande $demande, string $html, string $orientation = 'portrait'): DocumentDemande
+    {
+        $mpdf = $orientation === 'paysage' ? $this->getMpdfPaysage() : $this->getMpdf();
+        $mpdf->WriteHTML($html);
+
+        $type = $demande->type_document === 'releve_notes'
+            ? 'releve_notes_s' . $demande->semestre
+            : $demande->type_document;
+
+        $nomFichier    = $type . '_' . $demande->code_apogee . '_' . time() . '.pdf';
+        $chemin        = 'documents/' . $nomFichier;
+        $cheminComplet = storage_path('app/public/' . $chemin);
+
+        if (!file_exists(dirname($cheminComplet))) {
+            mkdir(dirname($cheminComplet), 0755, true);
+        }
+
+        // Supprimer l'ancien fichier physique s'il existe
+        $ancien = DocumentDemande::where('demande_id', $demande->id)->first();
+        if ($ancien && file_exists(storage_path('app/public/' . $ancien->chemin_fichier))) {
+            @unlink(storage_path('app/public/' . $ancien->chemin_fichier));
+        }
+
+        $mpdf->Output($cheminComplet, 'F');
+
+        return DocumentDemande::updateOrCreate(
+            ['demande_id' => $demande->id],
+            [
+                'nom'             => $nomFichier,
+                'chemin_fichier'  => $chemin,
+                'date_generation' => Carbon::now(),
+            ]
+        );
+    }
+
     private function sauvegarderMpdf(Mpdf $mpdf, Demande $demande, string $type): DocumentDemande
     {
         $nomFichier = $type . '_' . $demande->code_apogee . '_' . time() . '.pdf';
@@ -329,11 +480,14 @@ class PdfService
 
         $mpdf->Output($cheminComplet, 'F');
 
-        return DocumentDemande::create([
-            'demande_id'      => $demande->id,
-            'nom'             => $nomFichier,
-            'chemin_fichier'  => $chemin,
-            'date_generation' => Carbon::now(),
-        ]);
+        return DocumentDemande::updateOrCreate(
+            ['demande_id' => $demande->id],
+            [
+                'nom'             => $nomFichier,
+                'chemin_fichier'  => $chemin,
+                'date_generation' => Carbon::now(),
+            ]
+        );
     }
+    
 }

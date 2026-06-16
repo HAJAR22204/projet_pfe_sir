@@ -28,6 +28,13 @@ const DOCUMENTS_REQUIS = {
   ],
 };
 
+const TYPES_AVEC_DOCUMENT = [
+  'attestation_inscription',
+  'certificat_scolarite',
+  'releve_notes',
+  'attestation_reussite',
+];
+
 export default function DetailDemande({ modalId, onClose }) {
   const params    = useParams();
   const id        = modalId ?? params.id;
@@ -40,6 +47,12 @@ export default function DetailDemande({ modalId, onClose }) {
   const [showRefusModal, setShowRefusModal] = useState(false);
   const [motifRefus, setMotifRefus]     = useState('');
   const [message, setMessage]           = useState(null);
+
+  // ── Edition document ──
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [docHtml, setDocHtml]             = useState('');
+  const [docOrientation, setDocOrientation] = useState('portrait');
+  const [docLoading, setDocLoading]       = useState(false);
 
   useEffect(() => { fetchDemande(); }, [id]);
 
@@ -89,6 +102,50 @@ export default function DetailDemande({ modalId, onClose }) {
     } finally { setActionLoading(false); }
   };
 
+  // ── Apercu du document (nouvel onglet) ──
+  const handleApercu = async () => {
+    setDocLoading(true);
+    try {
+      const res = await demandeService.apercuDocument(id);
+      const blob = new Blob([res.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+    } catch (e) {
+      setMessage({ type:'error', text: "Erreur lors du chargement de l'apercu" });
+    } finally { setDocLoading(false); }
+  };
+
+  // ── Charger le HTML editable du document ──
+  const handleModifier = async () => {
+    setDocLoading(true);
+    try {
+      const res = await demandeService.documentHtml(id);
+      setDocHtml(res.data.html);
+      setDocOrientation(res.data.orientation);
+      setShowEditModal(true);
+    } catch (e) {
+      setMessage({ type:'error', text: e.response?.data?.message || 'Erreur lors du chargement du document' });
+    } finally { setDocLoading(false); }
+  };
+
+  // ── Enregistrer les modifications (stocke sur disque, remplace l'ancien) ──
+  const handleEnregistrer = async () => {
+    setDocLoading(true);
+    try {
+      const iframe = document.getElementById('doc-edit-iframe');
+      const htmlContent = iframe.contentDocument.documentElement.outerHTML;
+
+      const res = await demandeService.enregistrerDocumentPdf(id, htmlContent, docOrientation);
+
+      setMessage({ type:'success', text: res.data?.message || 'Document enregistre avec succes.' });
+      setShowEditModal(false);
+      fetchDemande();
+    } catch (e) {
+      setMessage({ type:'error', text: e.response?.data?.message || "Erreur lors de l'enregistrement" });
+    } finally { setDocLoading(false); }
+  };
+
   if (loading) return (
     <div style={{ display:'flex', justifyContent:'center', padding:'60px' }}>
       <p style={{ color:'#374151', fontSize:'13px' }}>Chargement...</p>
@@ -111,7 +168,9 @@ export default function DetailDemande({ modalId, onClose }) {
   const peutMettreEnCours = demande.statut === 'en_attente';
   const peutValider       = demande.statut === 'en_cours';
   const peutRefuser       = ['en_attente','en_cours'].includes(demande.statut);
+  const peutGererDocument = demande.statut === 'prete' && TYPES_AVEC_DOCUMENT.includes(demande.type_document);
 
+  console.log('statut:', demande.statut, 'type:', demande.type_document, 'peutGererDocument:', peutGererDocument);
   return (
     <div style={S.container}>
 
@@ -291,12 +350,7 @@ export default function DetailDemande({ modalId, onClose }) {
                   disabled={actionLoading}
                   style={{ ...S.actionBtn, background:'linear-gradient(135deg, #27AE60, #1E8449)' }}
                 >
-                  {actionLoading
-                    ? 'Traitement...'
-                    : ['retrait_bac', 'diplome_deust'].includes(demande.type_document)
-                      ? 'Valider la demande'
-                      : 'Valider et générer PDF'
-                  }
+                  {actionLoading ? 'Traitement...' : 'Valider la demande'}
                 </button>
               )}
               {peutRefuser && (
@@ -309,7 +363,28 @@ export default function DetailDemande({ modalId, onClose }) {
                   Refuser la demande
                 </button>
               )}
-              {!peutMettreEnCours && !peutValider && !peutRefuser && (
+
+              {peutGererDocument && (
+                <>
+                  <button
+                    onClick={handleApercu}
+                    disabled={docLoading}
+                    style={{ ...S.actionBtn, backgroundColor:'#fff',
+                      border:'1.5px solid #0F5FB4', color:'#0F5FB4' }}
+                  >
+                    {docLoading ? 'Chargement...' : 'Apercu du document'}
+                  </button>
+                  <button
+                    onClick={handleModifier}
+                    disabled={docLoading}
+                    style={{ ...S.actionBtn, background:'linear-gradient(135deg, #F28C28, #C6701C)' }}
+                  >
+                    {docLoading ? 'Chargement...' : 'Modifier le document'}
+                  </button>
+                </>
+              )}
+
+              {!peutMettreEnCours && !peutValider && !peutRefuser && !peutGererDocument && (
                 <div style={S.treatedBox}>
                   <p style={{ fontSize:'13px', color:'#374151', fontWeight:'500' }}>
                     Cette demande a été traitée.
@@ -319,34 +394,6 @@ export default function DetailDemande({ modalId, onClose }) {
             </div>
           </div>
 
-          {demande.document && (
-            <div style={S.card}>
-              <h3 style={S.cardTitle}>Document généré</h3>
-              <div style={S.documentBox}>
-                <div style={S.pdfIcon}>
-                  <span style={{ fontSize:'11px', fontWeight:'800', color:'#0F5FB4' }}>PDF</span>
-                </div>
-                <div style={{ flex:1, minWidth:0 }}>
-                  <p style={{ fontSize:'12px', fontWeight:'600', color:'#1B263B',
-                    wordBreak:'break-all', lineHeight:'1.4' }}>
-                    {demande.document.nom}
-                  </p>
-                  <p style={{ fontSize:'11px', color:'#374151', marginTop:'4px' }}>
-                    Généré le {new Date(demande.document.created_at).toLocaleDateString('fr-FR')}
-                  </p>
-                </div>
-                
-                <a
-                  href={`http://localhost:8000/storage/${demande.document.chemin_fichier}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={S.downloadBtn}
-                >
-                  Télécharger
-                </a>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
@@ -380,6 +427,39 @@ export default function DetailDemande({ modalId, onClose }) {
                 style={{ ...S.confirmBtn, opacity: !motifRefus.trim() ? 0.5 : 1 }}
               >
                 {actionLoading ? 'Envoi...' : 'Confirmer le refus'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Edition document ── */}
+      {showEditModal && (
+        <div style={S.modalOverlay}>
+          <div style={S.docModal}>
+            <div style={S.modalHeader}>
+              <h3 style={S.modalTitle}>Modifier le document</h3>
+            </div>
+
+            <div style={S.docFrameWrapper}>
+              <iframe
+                id="doc-edit-iframe"
+                srcDoc={docHtml}
+                style={S.docIframe}
+                title="Edition document"
+              />
+            </div>
+
+            <div style={{ display:'flex', gap:'10px', marginTop:'16px', justifyContent:'flex-end' }}>
+              <button onClick={() => setShowEditModal(false)} style={S.cancelBtn}>
+                Fermer
+              </button>
+              <button
+                onClick={handleEnregistrer}
+                disabled={docLoading}
+                style={{ ...S.confirmBtn, backgroundColor:'#27AE60' }}
+              >
+                {docLoading ? 'Enregistrement...' : 'Enregistrer les modifications'}
               </button>
             </div>
           </div>
@@ -518,25 +598,6 @@ const S = {
     border:'1px solid #E2E8F0',
   },
 
-  documentBox: {
-    display:'flex', alignItems:'center', gap:'14px',
-    padding:'14px', backgroundColor:'#F5F7FB',
-    borderRadius:'10px', border:'1px solid #E2E8F0',
-  },
-  pdfIcon: {
-    width:'42px', height:'42px', borderRadius:'8px',
-    backgroundColor:'#EFF6FF', border:'1px solid #BFDBFE',
-    display:'flex', alignItems:'center', justifyContent:'center',
-    flexShrink:0,
-  },
-  downloadBtn: {
-    padding:'8px 16px',
-    background:'linear-gradient(135deg, #0F5FB4, #0A74D1)',
-    color:'#fff', borderRadius:'8px', textDecoration:'none',
-    fontSize:'12px', fontWeight:'600', flexShrink:0,
-    boxShadow:'0 2px 6px rgba(15,95,180,0.25)',
-  },
-
   modalOverlay: {
     position:'fixed', inset:0,
     backgroundColor:'rgba(10,45,106,0.5)',
@@ -569,5 +630,33 @@ const S = {
     padding:'10px 20px', backgroundColor:'#E74C3C', color:'#fff',
     border:'none', borderRadius:'8px',
     fontSize:'13px', fontWeight:'600', cursor:'pointer',
+  },
+
+  // ── Document edition modal ──
+  docModal: {
+    backgroundColor:'#fff', borderRadius:'16px', padding:'24px',
+    width:'95%', maxWidth:'950px', height:'85vh',
+    display:'flex', flexDirection:'column',
+    boxShadow:'0 20px 60px rgba(10,45,106,0.2)',
+  },
+  docFrameWrapper: {
+    flex:1, overflow:'hidden', borderRadius:'8px',
+    border:'1px solid #E2E8F0', backgroundColor:'#F5F7FB',
+  },
+  docIframe: {
+    width:'100%', height:'100%', border:'none',
+  },
+
+  docsList: {
+    margin: 0,
+    paddingLeft: '20px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+  },
+  docsItem: {
+    fontSize: '13px',
+    color: '#1B263B',
+    lineHeight: '1.5',
   },
 };
