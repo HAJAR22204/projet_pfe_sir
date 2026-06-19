@@ -307,6 +307,21 @@ class DemandeController extends Controller
             ->orderBy('jour')
             ->get();
 
+        // ── Évolution par jour — demandes traitées ──
+        $evolutionTraiteesParJour = Demande::query()
+        ->when($dateDebut, fn($q) => $q->where('date_traitement', '>=', $dateDebut))
+        ->whereNotNull('date_traitement')
+        ->selectRaw('DATE(date_traitement) as jour, COUNT(*) as total')
+        ->groupBy('jour')
+        ->orderBy('jour')
+        ->get();
+
+        // ── Dernières demandes reçues (5 plus récentes, toutes périodes) ──
+        $demandesRecentes = Demande::query()
+            ->orderBy('date_creation', 'desc')
+            ->limit(5)
+            ->get(['id', 'nom', 'prenom', 'type_document', 'statut', 'date_creation']);
+
         return response()->json([
             'periode' => $periode,
             'resume'  => [
@@ -329,8 +344,10 @@ class DemandeController extends Controller
                 'diplome_deust'           => $resume->nb_diplome     ?? 0,
                 'retrait_bac'             => $resume->nb_bac         ?? 0,
             ],
-            'par_agent'          => $parAgent,
-            'evolution_par_jour' => $evolutionParJour,
+            'par_agent'           => $parAgent,
+            'evolution_par_jour'  => $evolutionParJour,
+            'demandes_recentes'   => $demandesRecentes,
+            'evolution_traitees_par_jour' => $evolutionTraiteesParJour,
         ], 200);
     }
 
@@ -408,7 +425,6 @@ class DemandeController extends Controller
             return response()->json(['message' => "Le document n'est disponible que pour une demande prete."], 400);
         }
 
-        // Si un fichier a deja ete enregistre (apres modification), le servir directement
         if ($demande->document) {
             $cheminComplet = storage_path('app/public/' . $demande->document->chemin_fichier);
             if (file_exists($cheminComplet)) {
@@ -419,7 +435,6 @@ class DemandeController extends Controller
             }
         }
 
-        // Sinon, generer en memoire depuis les donnees Apogee (premier apercu)
         try {
             $pdfContent = $this->pdfService->genererPdfApercu($demande);
             return response($pdfContent, 200)

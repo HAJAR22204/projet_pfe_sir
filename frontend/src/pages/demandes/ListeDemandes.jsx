@@ -62,6 +62,9 @@ export default function ListeDemandes() {
   useEffect(() => {
     const s = searchParams.get('statut');
     if (s) setStatut(s);
+
+    const open = searchParams.get('open');
+    if (open) setModalId(Number(open));
   }, []);
 
   useEffect(() => { fetchDemandes(); }, [statut, type, page]);

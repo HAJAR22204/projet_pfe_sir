@@ -16,19 +16,27 @@ export default function Login() {
     return () => clearTimeout(t);
   }, []);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    try {
-      await login({ email, password });
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+
+  try {
+    const user = await login({ email, password });
+
+    // Redirection selon le rôle
+    if (user?.role === 'admin') {
+      navigate('/admin/dashboard');
+    } else {
       navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Erreur de connexion');
-    } finally {
-      setLoading(false);
     }
-  };
+
+  } catch (err) {
+    setError(err.response?.data?.message || 'Erreur de connexion');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div style={S.container}>

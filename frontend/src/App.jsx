@@ -25,6 +25,12 @@ const AdminRoute = ({ children }) => {
   return user?.role === 'admin' ? children : <Navigate to="/dashboard" />;
 };
 
+const RoleRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'admin') return <Navigate to="/admin/dashboard" />;
+  return <Navigate to="/dashboard" />;
+};
+
 function App() {
   return (
     <AuthProvider>
@@ -36,7 +42,7 @@ function App() {
               <Layout />
             </PrivateRoute>
           }>
-            <Route index element={<Navigate to="/dashboard" />} />
+            <Route index element={<RoleRedirect />} />
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="demandes" element={<ListeDemandes />} />
             <Route path="demandes/:id" element={<DetailDemande />} />

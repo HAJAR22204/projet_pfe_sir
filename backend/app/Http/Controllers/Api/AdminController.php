@@ -143,65 +143,66 @@ class AdminController extends Controller
     }
 
     public function dashboard()
-    {
-        $totalUsers = User::count();
-        $totalDemandes = \App\Models\Demande::count();
+{
+    $totalUsers    = User::count();
+    $totalDemandes = \App\Models\Demande::count();
 
-        $demandesParStatut = [
-            'en_attente' => \App\Models\Demande::where('statut', 'en_attente')->count(),
-            'en_cours' => \App\Models\Demande::where('statut', 'en_cours')->count(),
-            'prete' => \App\Models\Demande::where('statut', 'prete')->count(),
-            'refusee' => \App\Models\Demande::where('statut', 'refusee')->count(),
-        ];
+    $demandesParStatut = [
+        'en_attente' => \App\Models\Demande::where('statut', 'en_attente')->count(),
+        'en_cours'   => \App\Models\Demande::where('statut', 'en_cours')->count(),
+        'prete'      => \App\Models\Demande::where('statut', 'prete')->count(),
+        'refusee'    => \App\Models\Demande::where('statut', 'refusee')->count(),
+    ];
 
-        $agentsPerformance = \App\Models\Demande::whereNotNull('traite_par')
-            ->with('traitePar')
-            ->selectRaw('traite_par, COUNT(*) as total,
-                         SUM(CASE WHEN statut = "prete" THEN 1 ELSE 0 END) as validees,
-                         SUM(CASE WHEN statut = "refusee" THEN 1 ELSE 0 END) as refusees,
-                         AVG(TIMESTAMPDIFF(HOUR, date_creation, date_traitement)) as temps_moyen')
-            ->groupBy('traite_par')
-            ->get()
-            ->map(function($item) {
-                return [
-                    'agent' => $item->traitePar ? $item->traitePar->prenom . ' ' . $item->traitePar->nom : 'Inconnu',
-                    'role' => $item->traitePar?->role,
-                    'total_traitees' => $item->total,
-                    'validees' => $item->validees,
-                    'refusees' => $item->refusees,
-                    'temps_moyen_heures' => round($item->temps_moyen, 1),
-                ];
-            });
+    // ── Performance agents : champs alignés avec le frontend ──
+    $agentsPerformance = User::whereIn('role', ['agentScolarite', 'chefScolarite'])
+        ->where('actif', true)
+        ->leftJoin('demandes', function($join) {
+            $join->on('demandes.traite_par', '=', 'users.id')
+                 ->whereNotNull('demandes.traite_par');
+        })
+        ->selectRaw('
+            users.id,
+            users.nom,
+            users.prenom,
+            users.role,
+            COUNT(demandes.id) as total,
+            SUM(CASE WHEN demandes.statut = "prete"   THEN 1 ELSE 0 END) as prete,
+            SUM(CASE WHEN demandes.statut = "refusee" THEN 1 ELSE 0 END) as refusee
+        ')
+        ->groupBy('users.id', 'users.nom', 'users.prenom', 'users.role')
+        ->orderByDesc('total')
+        ->get();
 
-        $activiteRecente = \App\Models\Demande::with('traitePar')
-            ->whereNotNull('traite_par')
-            ->orderBy('date_traitement', 'desc')
-            ->take(10)
-            ->get()
-            ->map(function($demande) {
+    $activiteRecente = \App\Models\Demande::with('traitePar')
+        ->whereNotNull('traite_par')
+        ->orderBy('date_traitement', 'desc')
+        ->take(10)
+        ->get()
+        ->map(function($demande) {
             return [
-            'id'            => $demande->id,
-            'type_document' => $demande->type_document,
-            'statut'        => $demande->statut,
-            'nom'           => $demande->nom,
-            'prenom'        => $demande->prenom,
-            'traite_par'    => $demande->traitePar?->prenom . ' ' . $demande->traitePar?->nom,
-            'date_creation' => $demande->date_creation,
-            'date'          => $demande->date_traitement ?? $demande->date_creation,
-        ];
+                'id'            => $demande->id,
+                'type_document' => $demande->type_document,
+                'statut'        => $demande->statut,
+                'nom'           => $demande->nom,
+                'prenom'        => $demande->prenom,
+                'traite_par'    => $demande->traitePar?->prenom . ' ' . $demande->traitePar?->nom,
+                'date_creation' => $demande->date_creation,
+                'date'          => $demande->date_traitement ?? $demande->date_creation,
+            ];
         });
 
-        return response()->json([
-            'total_users' => $totalUsers,
-            'total_demandes' => $totalDemandes,
-            'demandes_par_statut' => $demandesParStatut,
-            'agents_performance' => $agentsPerformance,
-            'activite_recente' => $activiteRecente,
-            'users_par_role' => [
-                'admin' => User::where('role', 'admin')->count(),
-                'chefScolarite' => User::where('role', 'chefScolarite')->count(),
-                'agentScolarite' => User::where('role', 'agentScolarite')->count(),
-            ],
-        ], 200);
-    }
+    return response()->json([
+        'total_users'         => $totalUsers,
+        'total_demandes'      => $totalDemandes,
+        'demandes_par_statut' => $demandesParStatut,
+        'agents_performance'  => $agentsPerformance,
+        'activite_recente'    => $activiteRecente,
+        'users_par_role'      => [
+            'admin'          => User::where('role', 'admin')->count(),
+            'chefScolarite'  => User::where('role', 'chefScolarite')->count(),
+            'agentScolarite' => User::where('role', 'agentScolarite')->count(),
+        ],
+    ], 200);
+}
 }
