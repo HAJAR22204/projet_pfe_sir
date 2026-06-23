@@ -36,9 +36,7 @@ export default function Navbar() {
 
       {/* Gauche — icône menu + fil d'Ariane */}
       <div style={S.left}>
-        <button style={S.menuIcon} aria-label="Menu">
           <HiOutlineBars3 style={{ fontSize: '20px' }} />
-        </button>
         <div style={S.breadcrumb}>
           <span style={S.breadcrumbRoot}>Scolarité</span>
           <span style={S.breadcrumbSep}>›</span>
@@ -55,7 +53,6 @@ export default function Navbar() {
           <p style={S.userName}>{user?.prenom} {user?.nom}</p>
           <p style={S.userSub}>{getRoleLabel(user?.role)}</p>
         </div>
-        <HiChevronDown style={{ fontSize: '16px', color: '#374151' }} />
       </div>
     </div>
   );

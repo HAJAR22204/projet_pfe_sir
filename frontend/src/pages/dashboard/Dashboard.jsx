@@ -188,41 +188,73 @@ export default function Dashboard() {
           </div>
 
           {/* Evolution */}
-          <div style={S.card}>
-            <h3 style={S.cardTitle}>Évolution des demandes</h3>
+<div style={S.card}>
+  <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'16px', paddingBottom:'10px', borderBottom:'1px solid #E2E8F0' }}>
+    <h3 style={{ fontSize:'13px', fontWeight:'700', color:'#1B263B', textTransform:'uppercase', letterSpacing:'0.5px' }}>
+      Évolution des demandes
+    </h3>
+    <div style={{ display:'flex', gap:'4px' }}>
+      <button
+        onClick={() => setEvolutionMode('recues')}
+        style={{
+          padding:'4px 12px', borderRadius:'20px', fontSize:'11px',
+          fontWeight:'600', cursor:'pointer', border:'1.5px solid',
+          backgroundColor: evolutionMode === 'recues' ? '#0F5FB4' : '#fff',
+          color: evolutionMode === 'recues' ? '#fff' : '#374151',
+          borderColor: evolutionMode === 'recues' ? '#0F5FB4' : '#E2E8F0',
+        }}
+      >
+        Reçues
+      </button>
+      <button
+        onClick={() => setEvolutionMode('traitees')}
+        style={{
+          padding:'4px 12px', borderRadius:'20px', fontSize:'11px',
+          fontWeight:'600', cursor:'pointer', border:'1.5px solid',
+          backgroundColor: evolutionMode === 'traitees' ? '#27AE60' : '#fff',
+          color: evolutionMode === 'traitees' ? '#fff' : '#374151',
+          borderColor: evolutionMode === 'traitees' ? '#27AE60' : '#E2E8F0',
+        }}
+      >
+        Traitées
+      </button>
+    </div>
+  </div>
 
-            <div style={S.evolutionContainer}>
-              {evolution.slice(-14).map((day, i) => (
-                <div key={i} style={S.evolutionDay}>
-                  <div style={S.evolutionBar}>
-                    <div
-                      style={{
-                        ...S.evolutionFill,
-                        height: `${Math.max(
-                          (day.total /
-                            Math.max(...evolution.map(d => d.total))) *
-                            80,
-                          4
-                        )}px`,
-                      }}
-                    />
-                  </div>
-
-                  <span style={S.evolutionDate}>
-                    {new Date(day.jour + "T00:00:00")
-                      .toLocaleDateString("fr-FR", {
-                        day: "2-digit",
-                        month: "2-digit",
-                      })}
-                  </span>
-
-                  <span style={S.evolutionCount}>
-                    {day.total}
-                  </span>
-                </div>
-              ))}
+  {/* Graphique */}
+  {(() => {
+    const data = evolutionMode === 'recues' ? evolution : evolutionTraitees;
+    const maxVal = Math.max(...data.map(d => d.total), 1);
+    return (
+      <div style={S.evolutionContainer}>
+        {data.slice(-14).map((day, i) => (
+          <div key={i} style={S.evolutionDay}>
+            <div style={S.evolutionBar}>
+              <div
+                style={{
+                  ...S.evolutionFill,
+                  height: `${Math.max((day.total / maxVal) * 80, 4)}px`,
+                  backgroundColor: evolutionMode === 'recues' ? '#0F5FB4' : '#27AE60',
+                }}
+              />
             </div>
+            <span style={S.evolutionDate}>
+              {new Date(day.jour + "T00:00:00").toLocaleDateString("fr-FR", {
+                day: "2-digit", month: "2-digit",
+              })}
+            </span>
+            <span style={S.evolutionCount}>{day.total}</span>
           </div>
+        ))}
+        {data.length === 0 && (
+          <p style={{ fontSize:'13px', color:'#374151', margin:'auto' }}>
+            Aucune donnée disponible
+          </p>
+        )}
+      </div>
+    );
+  })()}
+</div>
 
         </div>
 
